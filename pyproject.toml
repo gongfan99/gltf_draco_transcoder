@@ -34,6 +34,7 @@ cmake.args = [
     "-DCMAKE_BUILD_TYPE=Release",
     "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
 ]
+cmake.define.DRACO_SDK_PATH = "$DRACO_SDK_PATH"
 build.targets = ["install"]
 # Ensure the library is installed into the package directory
 wheel.install-dir = "src/gltf_draco_transcoder"
