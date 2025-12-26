@@ -95,9 +95,10 @@ jobs:
       - name: Configure CMake for Draco SDK
         if: steps.cache-sdk.outputs.cache-hit != 'true'
         working-directory: draco-src
+        shell: bash
         run: |
           if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-          apt-get update && apt-get install -y build-essential cmake
+            apt-get update && apt-get install -y build-essential cmake
           fi
           mkdir _gh_sdk_build && cd _gh_sdk_build
           cmake .. -G "${{ matrix.cmake_generator }}" \
@@ -114,6 +115,7 @@ jobs:
       - name: Create SDK package
         if: steps.cache-sdk.outputs.cache-hit != 'true'
         working-directory: draco-src
+        shell: bash
         run: ${{ matrix.package_commands }}
 
       - name: Upload SDK as artifact (fallback)
