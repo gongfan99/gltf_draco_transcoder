@@ -59,6 +59,7 @@ jobs:
           key: draco-sdk-${{ matrix.os }}-${{ env.DRACO_VERSION }}
           restore-keys: |
             draco-sdk-${{ matrix.os }}-${{ env.DRACO_VERSION }}
+          enableCrossOsArchive: true
 
       - name: Install git (Ubuntu 18.10)
         if: matrix.os == 'ubuntu-latest' && steps.cache-sdk.outputs.cache-hit != 'true'
@@ -149,6 +150,7 @@ jobs:
           key: draco-sdk-${{ matrix.os }}-${{ env.DRACO_VERSION }}
           restore-keys: |
             draco-sdk-${{ matrix.os }}-${{ env.DRACO_VERSION }}
+          enableCrossOsArchive: true
 
       - name: Download Draco SDK (if not cached)
         if: steps.cache-sdk.outputs.cache-hit != 'true'
