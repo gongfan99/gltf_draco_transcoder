@@ -14,7 +14,6 @@ jobs:
   build-draco-sdk:
     name: build-draco-sdk-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    needs: [checkout-source]
     strategy:
       matrix:
         include:
