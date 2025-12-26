@@ -1,0 +1,56 @@
+[build-system]
+requires = ["scikit-build-core", "setuptools-scm"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "gltf_draco_transcoder"
+dynamic = ["version"]
+description = "Python package for GLTF Draco transcoding with C++ backend"
+authors = [
+    {name = "Fan Gong", email: "gongfan99@hotmail.com"},
+]
+readme = "README.md"
+requires-python = ">=3.10, <3.15"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    # Add any Python dependencies here
+]
+
+[tool.scikit-build]
+cmake.minimum-version = "3.15"
+cmake.source-dir = "."
+cmake.args = [
+    "-DCMAKE_BUILD_TYPE=Release",
+    "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
+]
+cmake.targets = ["install"]
+# Ensure the library is installed into the package directory
+cmake.install-dir = "src/gltf_draco_transcoder"
+
+[tool.cibuildwheel]
+build = ["cp310-*", "cp311-*", "cp312-*", "cp313-*", "cp314-*"]
+skip = ["*-win32", "*-manylinux_i686", "*-musllinux_i686"]
+test-command = "python -c \"import gltf_draco_transcoder; print('Import successful')\""
+test-extras = []
+test-requires = []
+environment = { DRACO_SDK_PATH = "$DRACO_SDK_PATH" }
+
+[tool.cibuildwheel.linux]
+manylinux-x86_64-image = "none"
+repair-wheel-command = ""
+
+[tool.setuptools-scm]
+version_scheme = "guess-next-dev"
+local_scheme = "no-local-version"
+write_to = "src/gltf_draco_transcoder/_version.py"

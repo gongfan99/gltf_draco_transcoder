@@ -1,0 +1,233 @@
+#!/usr/bin/env python3
+"""
+Python wrapper for Draco glTF transcoder using ctypes.
+
+This module provides a simple interface to compress glTF files using Draco compression.
+"""
+
+import ctypes
+import io
+import os
+import platform
+from ctypes import Structure, c_char_p, c_int
+from pathlib import Path
+
+
+class DracoOptions(Structure):
+    """C-compatible struct for Draco compression options."""
+
+    _fields_ = [
+        ("quantization_position", c_int),
+        ("quantization_tex_coord", c_int),
+        ("quantization_normal", c_int),
+        ("quantization_color", c_int),
+        ("quantization_tangent", c_int),
+        ("quantization_weight", c_int),
+        ("quantization_generic", c_int),
+        ("compression_level", c_int),
+    ]
+
+
+def _load_library():
+    """Load the Draco transcoder shared library."""
+    system = platform.system().lower()
+    lib_name = "draco_transcoder_shared"
+
+    if system == "windows":
+        lib_name = f"{lib_name}.dll"
+    elif system == "darwin":
+        lib_name = f"lib{lib_name}.dylib"
+    else:  # Linux and others
+        lib_name = f"lib{lib_name}.so"
+
+    # Try to load from current directory first
+    if (Path(__file__).parent / lib_name).exists():
+        return ctypes.CDLL(Path(__file__).parent / lib_name)
+
+    # Try to load from build directory (common locations)
+    build_dirs = [
+        "build",
+        "cmake-build-release",
+        "cmake-build-debug",
+        "../draco_build",
+        "../build",
+    ]
+
+    for build_dir in build_dirs:
+        full_path = os.path.join(build_dir, lib_name)
+        if os.path.exists(full_path):
+            return ctypes.CDLL(full_path)
+
+    raise RuntimeError(f"Could not find Draco transcoder library: {lib_name}")
+
+
+# Load the library
+_lib = _load_library()
+
+# Configure function signatures
+_lib.draco_transcode_gltf.argtypes = [c_char_p, c_char_p, ctypes.POINTER(DracoOptions)]
+_lib.draco_transcode_gltf.restype = c_int
+
+_lib.draco_transcode_gltf_from_buffer.argtypes = [
+    ctypes.c_void_p,
+    ctypes.c_size_t,
+    ctypes.POINTER(DracoOptions),
+    ctypes.POINTER(ctypes.c_size_t),
+]
+_lib.draco_transcode_gltf_from_buffer.restype = ctypes.c_void_p
+
+_lib.draco_decompress_gltf_to_buffer.argtypes = [
+    ctypes.c_void_p,
+    ctypes.c_size_t,
+    ctypes.POINTER(ctypes.c_size_t),
+]
+_lib.draco_decompress_gltf_to_buffer.restype = ctypes.c_void_p
+
+_lib.draco_free_buffer.argtypes = [ctypes.c_void_p]
+_lib.draco_free_buffer.restype = None
+
+
+def compress_gltf(input_data, qp=11, qt=10, qn=8, qc=8, qtg=8, qw=8, qg=8, cl=7):
+    """
+    Compress glTF data using Draco compression.
+
+    Args:
+        input_data (str or io.BytesIO): Input glTF data - either a file path (str) or BytesIO object
+        qp (int): Quantization bits for position attribute (default: 11)
+        qt (int): Quantization bits for texture coordinate attribute (default: 10)
+        qn (int): Quantization bits for normal vector attribute (default: 8)
+        qc (int): Quantization bits for color attribute (default: 8)
+        qtg (int): Quantization bits for tangent attribute (default: 8)
+        qw (int): Quantization bits for weight attribute (default: 8)
+        qg (int): Quantization bits for generic attribute (default: 8)
+        cl (int): Compression level [0-10] (default: 7)
+
+    Returns:
+        io.BytesIO: Compressed glTF data
+
+    Raises:
+        RuntimeError: If input data is invalid or compression fails
+    """
+    # Handle input data
+    if isinstance(input_data, str):
+        if not os.path.exists(input_data):
+            raise RuntimeError(f"Input file does not exist: {input_data}")
+        # Read file into BytesIO
+        with open(input_data, "rb") as f:
+            input_buffer = io.BytesIO(f.read())
+    elif isinstance(input_data, io.BytesIO):
+        input_buffer = input_data
+    else:
+        raise RuntimeError("input_data must be a file path (str) or BytesIO object")
+
+    # Create options struct
+    options = DracoOptions()
+    options.quantization_position = qp
+    options.quantization_tex_coord = qt
+    options.quantization_normal = qn
+    options.quantization_color = qc
+    options.quantization_tangent = qtg
+    options.quantization_weight = qw
+    options.quantization_generic = qg
+    options.compression_level = cl
+
+    # Get input data
+    input_bytes = input_buffer.getvalue()
+    input_size = len(input_bytes)
+
+    # Call the C function
+    output_size = ctypes.c_size_t()
+    result = _lib.draco_transcode_gltf_from_buffer(
+        input_bytes, input_size, ctypes.byref(options), ctypes.byref(output_size)
+    )
+
+    if not result:
+        raise RuntimeError("Draco transcoding failed")
+
+    try:
+        # Copy the result to Python bytes and return BytesIO
+        output_data = ctypes.string_at(result, output_size.value)
+        return io.BytesIO(output_data)
+    finally:
+        # Always free the C buffer
+        _lib.draco_free_buffer(result)
+
+
+def decompress_gltf(input_data):
+    """
+    Decompress Draco-compressed glTF data to uncompressed glTF.
+
+    Args:
+        input_data (str or io.BytesIO): Input compressed glTF data - either a file path (str) or BytesIO object
+
+    Returns:
+        io.BytesIO: Decompressed glTF data
+
+    Raises:
+        RuntimeError: If input data is invalid or decompression fails
+    """
+    # Handle input data
+    if isinstance(input_data, str):
+        if not os.path.exists(input_data):
+            raise RuntimeError(f"Input file does not exist: {input_data}")
+        # Read file into BytesIO
+        with open(input_data, "rb") as f:
+            input_buffer = io.BytesIO(f.read())
+    elif isinstance(input_data, io.BytesIO):
+        input_buffer = input_data
+    else:
+        raise RuntimeError("input_data must be a file path (str) or BytesIO object")
+
+    # Get input data
+    input_bytes = input_buffer.getvalue()
+    input_size = len(input_bytes)
+
+    # Call the C function
+    output_size = ctypes.c_size_t()
+    result = _lib.draco_decompress_gltf_to_buffer(
+        input_bytes, input_size, ctypes.byref(output_size)
+    )
+
+    if not result:
+        raise RuntimeError("Draco decompression failed")
+
+    try:
+        # Copy the result to Python bytes and return BytesIO
+        output_data = ctypes.string_at(result, output_size.value)
+        return io.BytesIO(output_data)
+    finally:
+        # Always free the C buffer
+        _lib.draco_free_buffer(result)
+
+
+if __name__ == "__main__":
+    # Simple test/example
+    import sys
+
+    if len(sys.argv) != 3:
+        print("Usage: python draco_transcoder.py <input.gltf> <output.gltf>")
+        print("Example: python draco_transcoder.py input.gltf output_compressed.gltf")
+        sys.exit(1)
+
+    input_file = sys.argv[1]
+    output_file = sys.argv[2]
+
+    try:
+        # Compress the glTF file
+        compressed_data = compress_gltf(input_file)
+
+        # Save the compressed data to file
+        with open(output_file, "wb") as f:
+            f.write(compressed_data.getvalue())
+
+        print(f"Successfully compressed {input_file} to {output_file}")
+
+        # Example of decompression (round-trip test)
+        decompressed_data = decompress_gltf(output_file)
+        print(
+            f"Successfully decompressed back to {len(decompressed_data.getvalue())} bytes"
+        )
+
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
