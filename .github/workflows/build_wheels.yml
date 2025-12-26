@@ -8,6 +8,7 @@ on:
 
 env:
   DRACO_VERSION: 1.5.7
+  DRACO_SDK_REL_PATH: sdk
 
 jobs:
   check-sdk-cache:
@@ -26,7 +27,7 @@ jobs:
         id: cache-sdk
         uses: actions/cache@v4
         with:
-          path: sdk/
+          path: ${{ env.DRACO_SDK_REL_PATH }}
           key: draco-sdk-${{ matrix.os }}-${{ env.DRACO_VERSION }}
           restore-keys: |
             draco-sdk-${{ matrix.os }}-${{ env.DRACO_VERSION }}
@@ -46,30 +47,30 @@ jobs:
             sdk_target: draco_static
             lib_name: libdraco.a
             package_commands: |
-              mkdir -p sdk/lib sdk/include
-              cp _gh_sdk_build/libdraco.a sdk/lib/
-              cp -r src/draco sdk/include/
-              cp _gh_sdk_build/draco/draco_features.h sdk/include/draco/
+              mkdir -p ../${{ env.DRACO_SDK_REL_PATH }}/lib ../${{ env.DRACO_SDK_REL_PATH }}/include
+              cp _gh_sdk_build/libdraco.a ../${{ env.DRACO_SDK_REL_PATH }}/lib/
+              cp -r src/draco ../${{ env.DRACO_SDK_REL_PATH }}/include/
+              cp _gh_sdk_build/draco/draco_features.h ../${{ env.DRACO_SDK_REL_PATH }}/include/draco/
           - os: windows-latest
             cmake_generator: "Visual Studio 17 2022"
             cmake_build_args: "--config Release"
             sdk_target: draco
             lib_name: draco.lib
             package_commands: |
-              mkdir -p sdk/lib sdk/include
-              cp _gh_sdk_build/Release/draco.lib sdk/lib/
-              cp -r src/draco sdk/include/
-              cp _gh_sdk_build/draco/draco_features.h sdk/include/draco/
+              mkdir -p ../${{ env.DRACO_SDK_REL_PATH }}/lib ../${{ env.DRACO_SDK_REL_PATH }}/include
+              cp _gh_sdk_build/Release/draco.lib ../${{ env.DRACO_SDK_REL_PATH }}/lib/
+              cp -r src/draco ../${{ env.DRACO_SDK_REL_PATH }}/include/
+              cp _gh_sdk_build/draco/draco_features.h ../${{ env.DRACO_SDK_REL_PATH }}/include/draco/
           - os: macos-latest
             cmake_generator: "Unix Makefiles"
             cmake_build_args: "-- -j2"
             sdk_target: draco_static
             lib_name: libdraco.a
             package_commands: |
-              mkdir -p sdk/lib sdk/include
-              cp _gh_sdk_build/libdraco.a sdk/lib/
-              cp -r src/draco sdk/include/
-              cp _gh_sdk_build/draco/draco_features.h sdk/include/draco/
+              mkdir -p ../${{ env.DRACO_SDK_REL_PATH }}/lib ../${{ env.DRACO_SDK_REL_PATH }}/include
+              cp _gh_sdk_build/libdraco.a ../${{ env.DRACO_SDK_REL_PATH }}/lib/
+              cp -r src/draco ../${{ env.DRACO_SDK_REL_PATH }}/include/
+              cp _gh_sdk_build/draco/draco_features.h ../${{ env.DRACO_SDK_REL_PATH }}/include/draco/
     container: ${{ matrix.container }}
     steps:
       - name: Install git (Ubuntu 18.10)
@@ -84,14 +85,14 @@ jobs:
         with:
           repository: google/draco
           path: draco-src
-          ref: v${{ env.DRACO_VERSION }}
+          ref: ${{ env.DRACO_VERSION }}
           submodules: true
 
       - name: Cache Draco SDK
         id: cache-sdk
         uses: actions/cache@v4
         with:
-          path: draco-src/sdk/
+          path: ${{ env.DRACO_SDK_REL_PATH }}
           key: draco-sdk-${{ matrix.os }}-${{ env.DRACO_VERSION }}
           restore-keys: |
             draco-sdk-${{ matrix.os }}-${{ env.DRACO_VERSION }}
@@ -127,7 +128,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: draco-sdk-${{ matrix.os }}
-          path: draco-src/sdk/
+          path: ${{ env.DRACO_SDK_REL_PATH }}
           retention-days: 7
 
   checkout-source:
@@ -171,7 +172,7 @@ jobs:
         id: cache-sdk
         uses: actions/cache@v4
         with:
-          path: sdk/
+          path: ${{ env.DRACO_SDK_REL_PATH }}
           key: draco-sdk-${{ matrix.os }}-${{ env.DRACO_VERSION }}
           restore-keys: |
             draco-sdk-${{ matrix.os }}-${{ env.DRACO_VERSION }}
@@ -181,7 +182,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: draco-sdk-${{ matrix.os }}
-          path: sdk/
+          path: ${{ env.DRACO_SDK_REL_PATH }}
 
       - name: Download source code
         uses: actions/download-artifact@v4
@@ -202,7 +203,7 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          DRACO_SDK_PATH: ${{ github.workspace }}/sdk
+          DRACO_SDK_PATH: ${{ github.workspace }}/${{ env.DRACO_SDK_REL_PATH }}
 
       - uses: actions/upload-artifact@v4
         with:
