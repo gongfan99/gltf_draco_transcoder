@@ -107,7 +107,7 @@ jobs:
         with:
           name: draco-sdk-${{ matrix.os }}
           path: ${{ env.DRACO_SDK_REL_PATH }}
-          retention-days: 7
+          retention-days: 1
 
   checkout-source:
     name: checkout-source
@@ -136,8 +136,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
-          - os: windows-latest
+          # - os: ubuntu-latest
+          # - os: windows-latest
           - os: macos-latest
     steps:
       - name: Cache Draco SDK
