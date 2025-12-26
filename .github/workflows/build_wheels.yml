@@ -31,7 +31,7 @@ jobs:
   build-draco-sdk:
     name: build-draco-sdk-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    needs: [check-sdk-cache]
+    needs: [checkout-source, check-sdk-cache]
     if: needs.check-sdk-cache.outputs.cache-hit != 'true'
     strategy:
       matrix:
@@ -199,7 +199,7 @@ jobs:
   build_sdist:
     name: Build source distribution
     runs-on: ubuntu-latest
-    needs: [checkout-source]
+    needs: [build_wheels]
     steps:
       - uses: actions/checkout@v4
 
