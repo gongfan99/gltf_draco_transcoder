@@ -44,7 +44,9 @@ skip = ["*-win32", "*-manylinux_i686", "*-musllinux_i686"]
 test-command = "python -c \"import gltf_draco_transcoder; print('Import successful')\""
 test-extras = []
 test-requires = []
-environment = { DRACO_SDK_PATH = "$DRACO_SDK_PATH" }
+
+[tool.cibuildwheel.environment]
+DRACO_SDK_PATH = "$DRACO_SDK_PATH"
 
 [tool.cibuildwheel.linux]
 manylinux-x86_64-image = "none"
