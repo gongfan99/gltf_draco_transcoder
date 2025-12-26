@@ -48,6 +48,9 @@ test-requires = []
 [tool.cibuildwheel.environment]
 DRACO_SDK_PATH = "$DRACO_SDK_PATH"
 
+[tool.cibuildwheel.linux]
+manylinux-x86_64-image = "manylinux_2_28"
+
 [tool.setuptools-scm]
 version_scheme = "guess-next-dev"
 local_scheme = "no-local-version"

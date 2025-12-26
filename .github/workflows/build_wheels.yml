@@ -11,32 +11,10 @@ env:
   DRACO_SDK_REL_PATH: sdk
 
 jobs:
-  check-sdk-cache:
-    name: check-sdk-cache-${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    outputs:
-      cache-hit: ${{ steps.cache-sdk.outputs.cache-hit }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-          - os: windows-latest
-          - os: macos-latest
-    steps:
-      - name: Check SDK Cache
-        id: cache-sdk
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.DRACO_SDK_REL_PATH }}
-          key: draco-sdk-${{ matrix.os }}-${{ env.DRACO_VERSION }}
-          restore-keys: |
-            draco-sdk-${{ matrix.os }}-${{ env.DRACO_VERSION }}
-
   build-draco-sdk:
     name: build-draco-sdk-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    needs: [checkout-source, check-sdk-cache]
-    if: needs.check-sdk-cache.outputs.cache-hit != 'true'
+    needs: [checkout-source]
     strategy:
       matrix:
         include:
@@ -73,21 +51,6 @@ jobs:
               cp _gh_sdk_build/draco/draco_features.h ../sdk/include/draco/
     container: ${{ matrix.container }}
     steps:
-      - name: Install git (Ubuntu 18.10)
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          sed -i 's/archive.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
-          sed -i 's/security.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
-          apt-get update && apt-get install -y git
-
-      - name: Clone Draco with Submodules
-        uses: actions/checkout@v4
-        with:
-          repository: google/draco
-          path: draco-src
-          ref: ${{ env.DRACO_VERSION }}
-          submodules: true
-
       - name: Cache Draco SDK
         id: cache-sdk
         uses: actions/cache@v4
@@ -96,6 +59,22 @@ jobs:
           key: draco-sdk-${{ matrix.os }}-${{ env.DRACO_VERSION }}
           restore-keys: |
             draco-sdk-${{ matrix.os }}-${{ env.DRACO_VERSION }}
+
+      - name: Install git (Ubuntu 18.10)
+        if: matrix.os == 'ubuntu-latest' && steps.cache-sdk.outputs.cache-hit != 'true'
+        run: |
+          sed -i 's/archive.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
+          sed -i 's/security.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
+          apt-get update && apt-get install -y git
+
+      - name: Clone Draco with Submodules
+        if: steps.cache-sdk.outputs.cache-hit != 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: google/draco
+          path: draco-src
+          ref: ${{ env.DRACO_VERSION }}
+          submodules: true
 
       - name: Configure CMake for Draco SDK
         if: steps.cache-sdk.outputs.cache-hit != 'true'
