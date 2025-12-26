@@ -6,7 +6,11 @@ project(gltf_draco_transcoder VERSION 0.1.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Check if we should use a pre-built Draco SDK
+# Check for SDK path in CMake variable OR Environment variable
+if(NOT DEFINED DRACO_SDK_PATH AND DEFINED ENV{DRACO_SDK_PATH})
+  set(DRACO_SDK_PATH "$ENV{DRACO_SDK_PATH}")
+endif()
+
 if(DEFINED DRACO_SDK_PATH AND EXISTS "${DRACO_SDK_PATH}")
   message(STATUS "Using pre-built Draco SDK from: ${DRACO_SDK_PATH}")
 

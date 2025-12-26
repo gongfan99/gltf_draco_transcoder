@@ -159,19 +159,9 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            container: ubuntu:18.10
           - os: windows-latest
           - os: macos-latest
-    container: ${{ matrix.container }}
     steps:
-      - name: Fix Ubuntu 18.10 repositories (if needed)
-        if: matrix.os == 'ubuntu-latest'
-        shell: bash
-        run: |
-          sed -i 's/archive.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
-          sed -i 's/security.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
-          apt-get update && apt-get install -y build-essential cmake python3-dev
-
       - name: Cache Draco SDK
         id: cache-sdk
         uses: actions/cache@v4
