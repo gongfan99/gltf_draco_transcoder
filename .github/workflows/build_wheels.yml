@@ -151,6 +151,10 @@ jobs:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     needs: [checkout-source, build-draco-sdk]
+    if: |
+      always() &&
+      needs.checkout-source.result == 'success' &&
+      (needs.build-draco-sdk.result == 'success' || needs.build-draco-sdk.result == 'skipped')
     strategy:
       matrix:
         include:
