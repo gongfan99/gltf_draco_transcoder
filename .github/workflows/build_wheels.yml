@@ -69,6 +69,13 @@ jobs:
               cp _gh_sdk_build/draco/draco_features.h sdk/include/draco/
     container: ${{ matrix.container }}
     steps:
+      - name: Install git (Ubuntu 18.10)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sed -i 's/archive.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
+          sed -i 's/security.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
+          apt-get update && apt-get install -y git
+
       - name: Clone Draco with Submodules
         uses: actions/checkout@v4
         with:
