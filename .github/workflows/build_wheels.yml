@@ -47,30 +47,30 @@ jobs:
             sdk_target: draco_static
             lib_name: libdraco.a
             package_commands: |
-              mkdir -p ../${{ env.DRACO_SDK_REL_PATH }}/lib ../${{ env.DRACO_SDK_REL_PATH }}/include
-              cp _gh_sdk_build/libdraco.a ../${{ env.DRACO_SDK_REL_PATH }}/lib/
-              cp -r src/draco ../${{ env.DRACO_SDK_REL_PATH }}/include/
-              cp _gh_sdk_build/draco/draco_features.h ../${{ env.DRACO_SDK_REL_PATH }}/include/draco/
+              mkdir -p ../sdk/lib ../sdk/include
+              cp _gh_sdk_build/libdraco.a ../sdk/lib/
+              cp -r src/draco ../sdk/include/
+              cp _gh_sdk_build/draco/draco_features.h ../sdk/include/draco/
           - os: windows-latest
             cmake_generator: "Visual Studio 17 2022"
             cmake_build_args: "--config Release"
             sdk_target: draco
             lib_name: draco.lib
             package_commands: |
-              mkdir -p ../${{ env.DRACO_SDK_REL_PATH }}/lib ../${{ env.DRACO_SDK_REL_PATH }}/include
-              cp _gh_sdk_build/Release/draco.lib ../${{ env.DRACO_SDK_REL_PATH }}/lib/
-              cp -r src/draco ../${{ env.DRACO_SDK_REL_PATH }}/include/
-              cp _gh_sdk_build/draco/draco_features.h ../${{ env.DRACO_SDK_REL_PATH }}/include/draco/
+              mkdir -p ../sdk/lib ../sdk/include
+              cp _gh_sdk_build/Release/draco.lib ../sdk/lib/
+              cp -r src/draco ../sdk/include/
+              cp _gh_sdk_build/draco/draco_features.h ../sdk/include/draco/
           - os: macos-latest
             cmake_generator: "Unix Makefiles"
             cmake_build_args: "-- -j2"
             sdk_target: draco_static
             lib_name: libdraco.a
             package_commands: |
-              mkdir -p ../${{ env.DRACO_SDK_REL_PATH }}/lib ../${{ env.DRACO_SDK_REL_PATH }}/include
-              cp _gh_sdk_build/libdraco.a ../${{ env.DRACO_SDK_REL_PATH }}/lib/
-              cp -r src/draco ../${{ env.DRACO_SDK_REL_PATH }}/include/
-              cp _gh_sdk_build/draco/draco_features.h ../${{ env.DRACO_SDK_REL_PATH }}/include/draco/
+              mkdir -p ../sdk/lib ../sdk/include
+              cp _gh_sdk_build/libdraco.a ../sdk/lib/
+              cp -r src/draco ../sdk/include/
+              cp _gh_sdk_build/draco/draco_features.h ../sdk/include/draco/
     container: ${{ matrix.container }}
     steps:
       - name: Install git (Ubuntu 18.10)
