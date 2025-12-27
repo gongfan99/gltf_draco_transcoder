@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  DRACO_VERSION: 3abbc668f6060c41094f9979d395a12f5a092896
+  DRACO_VERSION: main
   DRACO_SDK_REL_PATH: sdk
 
 jobs:
