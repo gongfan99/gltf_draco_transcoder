@@ -100,7 +100,8 @@ jobs:
             -DDRACO_TRANSCODER_SUPPORTED=ON \
             -DDRACO_BUILD_EXECUTABLES=OFF \
             -DBUILD_SHARED_LIBS=OFF \
-            -DCMAKE_OSX_ARCHITECTURES=arm64
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
 
       - name: Build Draco SDK (static library)
         if: steps.cache-sdk.outputs.cache-hit != 'true'
