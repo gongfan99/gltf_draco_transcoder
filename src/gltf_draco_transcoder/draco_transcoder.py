@@ -40,11 +40,18 @@ def _load_library():
     else:  # Linux and others
         lib_name = f"lib{lib_name}.so"
 
-    # Try to load from current directory first
-    if (Path(__file__).parent / lib_name).exists():
-        return ctypes.CDLL(Path(__file__).parent / lib_name)
+    # Try to load from the same directory as this file (installed package)
+    this_dir = Path(__file__).parent
+    candidates = [
+        this_dir / lib_name,
+        this_dir.parent / lib_name,  # Check parent directory
+    ]
 
-    # Try to load from build directory (common locations)
+    for candidate in candidates:
+        if candidate.exists():
+            return ctypes.CDLL(str(candidate))
+
+    # Try to load from build directory (development)
     build_dirs = [
         "build",
         "cmake-build-release",
@@ -54,9 +61,9 @@ def _load_library():
     ]
 
     for build_dir in build_dirs:
-        full_path = os.path.join(build_dir, lib_name)
-        if os.path.exists(full_path):
-            return ctypes.CDLL(full_path)
+        full_path = Path(build_dir) / lib_name
+        if full_path.exists():
+            return ctypes.CDLL(str(full_path))
 
     raise RuntimeError(f"Could not find Draco transcoder library: {lib_name}")
 
