@@ -157,6 +157,7 @@ jobs:
         env:
           DRACO_SDK_PATH: ${{ github.workspace }}/${{ env.DRACO_SDK_REL_PATH }}
           CIBW_ARCHS_MACOS: arm64
+          CIBW_ENVIRONMENT_LINUX: DRACO_SDK_PATH=/project/${{ env.DRACO_SDK_REL_PATH }}
 
       - uses: actions/upload-artifact@v4
         with:
