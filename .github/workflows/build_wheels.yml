@@ -17,31 +17,33 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
-            container: ubuntu:18.10
-            cmake_generator: "Unix Makefiles"
-            cmake_build_args: "-- -j2"
-            sdk_target: draco_static
-            lib_name: libdraco.a
-            package_commands: |
-              mkdir -p ../sdk/lib ../sdk/include
-              cp _gh_sdk_build/libdraco.a ../sdk/lib/
-              cp -r src/draco ../sdk/include/
-              cp _gh_sdk_build/draco/draco_features.h ../sdk/include/draco/
-              find _gh_sdk_build -name Eigen -type d -prune -exec cp -r {} ../sdk/include/ \;
-              find . -path "*/third_party/filesystem" -type d -exec cp -r {} ../sdk/include/ \;
-          - os: windows-latest
-            cmake_generator: "Visual Studio 17 2022"
-            cmake_build_args: "--config Release"
-            sdk_target: draco
-            lib_name: draco.lib
-            package_commands: |
-              mkdir -p ../sdk/lib ../sdk/include
-              cp _gh_sdk_build/Release/draco.lib ../sdk/lib/
-              cp -r src/draco ../sdk/include/
-              cp _gh_sdk_build/draco/draco_features.h ../sdk/include/draco/
-              find _gh_sdk_build -name Eigen -type d -prune -exec cp -r {} ../sdk/include/ \;
-              find . -path "*/third_party/filesystem" -type d -exec cp -r {} ../sdk/include/ \;
+          # - os: ubuntu-latest
+          #   container: ubuntu:18.10
+          #   cmake_generator: "Unix Makefiles"
+          #   cmake_build_args: "-- -j2"
+          #   sdk_target: draco_static
+          #   lib_name: libdraco.a
+          #   package_commands: |
+          #     mkdir -p ../sdk/lib ../sdk/include
+          #     cp _gh_sdk_build/libdraco.a ../sdk/lib/
+          #     cp -r src/draco ../sdk/include/
+          #     cp _gh_sdk_build/draco/draco_features.h ../sdk/include/draco/
+          #     cp -r third_party/eigen/Eigen ../sdk/include/
+          #     cp -r third_party/filesystem/include/ghc ../sdk/include/
+          #     cp third_party/tinygltf/*.h third_party/tinygltf/*.hpp ../sdk/include/ 2>/dev/null || true
+          # - os: windows-latest
+          #   cmake_generator: "Visual Studio 17 2022"
+          #   cmake_build_args: "--config Release"
+          #   sdk_target: draco
+          #   lib_name: draco.lib
+          #   package_commands: |
+          #     mkdir -p ../sdk/lib ../sdk/include
+          #     cp _gh_sdk_build/Release/draco.lib ../sdk/lib/
+          #     cp -r src/draco ../sdk/include/
+          #     cp _gh_sdk_build/draco/draco_features.h ../sdk/include/draco/
+          #     cp -r third_party/eigen/Eigen ../sdk/include/
+          #     cp -r third_party/filesystem/include/ghc ../sdk/include/
+          #     cp third_party/tinygltf/*.h third_party/tinygltf/*.hpp ../sdk/include/ 2>/dev/null || true
           - os: macos-latest
             cmake_generator: "Unix Makefiles"
             cmake_build_args: "-- -j2"
@@ -52,8 +54,9 @@ jobs:
               cp _gh_sdk_build/libdraco.a ../sdk/lib/
               cp -r src/draco ../sdk/include/
               cp _gh_sdk_build/draco/draco_features.h ../sdk/include/draco/
-              find _gh_sdk_build -name Eigen -type d -prune -exec cp -r {} ../sdk/include/ \;
-              find . -path "*/third_party/filesystem" -type d -exec cp -r {} ../sdk/include/ \;
+              cp -r third_party/eigen/Eigen ../sdk/include/
+              cp -r third_party/filesystem/include/ghc ../sdk/include/
+              cp third_party/tinygltf/*.h third_party/tinygltf/*.hpp ../sdk/include/ 2>/dev/null || true
     container: ${{ matrix.container }}
     steps:
       - name: Cache Draco SDK
