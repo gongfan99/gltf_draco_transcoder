@@ -33,6 +33,8 @@ cmake.source-dir = "."
 cmake.args = [
     "-DCMAKE_BUILD_TYPE=Release",
     "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
+    "-DDRACO_TRANSCODER_SUPPORTED=ON",
+    "-DDRACO_BUILD_EXECUTABLES=OFF",
 ]
 build.targets = ["install"]
 # Ensure the library is installed into the package directory
