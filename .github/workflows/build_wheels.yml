@@ -20,7 +20,7 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            container: ubuntu:18.10
+            container: quay.io/pypa/manylinux_2_28_x86_64
             cmake_generator: "Unix Makefiles"
             cmake_build_args: "-- -j2"
             sdk_target: draco_static
@@ -70,12 +70,7 @@ jobs:
           restore-keys: |
             draco-sdk-${{ matrix.os }}-${{ env.DRACO_VERSION }}
 
-      - name: Install git (Ubuntu 18.10)
-        if: matrix.os == 'ubuntu-latest' && steps.cache-sdk.outputs.cache-hit != 'true'
-        run: |
-          sed -i 's/archive.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
-          sed -i 's/security.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
-          apt-get update && apt-get install -y git
+      # manylinux_2_28_x86_64 already has git, gcc, cmake installed
 
       - name: Clone Draco with Submodules
         if: steps.cache-sdk.outputs.cache-hit != 'true'
@@ -92,11 +87,12 @@ jobs:
         shell: bash
         run: |
           if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-            apt-get update && apt-get install -y build-essential cmake
+            source /opt/rh/gcc-toolset-12/enable || true
           fi
           mkdir _gh_sdk_build && cd _gh_sdk_build
           cmake .. -G "${{ matrix.cmake_generator }}" \
             -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DDRACO_TRANSCODER_SUPPORTED=ON \
             -DDRACO_BUILD_EXECUTABLES=OFF \
             -DBUILD_SHARED_LIBS=OFF \
