@@ -23,21 +23,16 @@ jobs:
           #   container: quay.io/pypa/manylinux_2_28_x86_64
           #   cmake_generator: "Unix Makefiles"
           #   cmake_build_args: "-- -j2"
-          #   sdk_target: draco_static
-          #   lib_name: libdraco.a
-          #   package_commands: cmake --install _gh_draco_sdk_build
+          - os: ubuntu-24.04-arm
+            container: quay.io/pypa/manylinux_2_28_aarch64
+            cmake_generator: "Unix Makefiles"
+            cmake_build_args: "-- -j4"
           # - os: windows-latest
           #   cmake_generator: "Visual Studio 17 2022"
           #   cmake_build_args: "--config Release"
-          #   sdk_target: draco
-          #   lib_name: draco.lib
-          #   package_commands: cmake --install _gh_draco_sdk_build
           - os: macos-latest
             cmake_generator: "Unix Makefiles"
             cmake_build_args: "-- -j2"
-            sdk_target: draco_static
-            lib_name: libdraco.a
-            package_commands: cmake --install _gh_draco_sdk_build
     container: ${{ matrix.container }}
     steps:
       - name: Cache Draco SDK
@@ -80,13 +75,17 @@ jobs:
       - name: Build Draco SDK (static library)
         if: steps.cache-sdk.outputs.cache-hit != 'true'
         working-directory: draco_src/_gh_draco_sdk_build
-        run: cmake --build . --target ${{ matrix.sdk_target }} ${{ matrix.cmake_build_args }}
+        run: cmake --build . ${{ matrix.cmake_build_args }}
 
       - name: Create SDK package
         if: steps.cache-sdk.outputs.cache-hit != 'true'
         working-directory: draco_src
         shell: bash
-        run: ${{ matrix.package_commands }}
+        run: |
+          cmake --install _gh_draco_sdk_build
+          cp -r third_party/eigen/Eigen ${{ github.workspace }}/${{ env.DRACO_SDK_REL_PATH }}/include/
+          cp -r third_party/filesystem/include/ghc ${{ github.workspace }}/${{ env.DRACO_SDK_REL_PATH }}/include/
+          cp third_party/tinygltf/*.h third_party/tinygltf/*.hpp ${{ github.workspace }}/${{ env.DRACO_SDK_REL_PATH }}/include/ 2>/dev/null || true
 
       - name: Upload SDK as artifact
         uses: actions/upload-artifact@v4
@@ -103,6 +102,7 @@ jobs:
       matrix:
         include:
           # - os: ubuntu-latest
+          - os: ubuntu-24.04-arm
           # - os: windows-latest
           - os: macos-latest
     steps:
@@ -146,6 +146,7 @@ jobs:
       matrix:
         include:
           # - os: ubuntu-latest
+          - os: ubuntu-24.04-arm
           # - os: windows-latest
           - os: macos-latest
     steps:
@@ -206,6 +207,11 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: cibw-wheels-ubuntu-latest
+          path: dist/
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: cibw-wheels-ubuntu-24.04-arm
           path: dist/
 
       - uses: actions/download-artifact@v4
