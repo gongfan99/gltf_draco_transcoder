@@ -52,7 +52,7 @@ def _load_library() -> ctypes.CDLL:
 
     for candidate in candidates:
         if candidate.exists():
-            return ctypes.CDLL(candidate)
+            return ctypes.CDLL(str(candidate))
 
     raise RuntimeError(f"Could not find Draco transcoder library: {lib_name}")
 
