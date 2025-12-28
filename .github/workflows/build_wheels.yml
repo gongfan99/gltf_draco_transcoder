@@ -88,7 +88,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ./wheelhouse
-          key: cibw-wheels-${{ matrix.os }}-${{ github.sha }}
+          key: cibw-wheels-${{ matrix.os }}-1
 
       - name: Checkout Source Code
         if: steps.cache-wheels.outputs.cache-hit != 'true'
@@ -130,7 +130,6 @@ jobs:
     name: Test wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     needs: [build_wheels]
-    container: ${{ matrix.container }}
     strategy:
       matrix:
         include:
@@ -156,16 +155,16 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies (Alpine)
-        if: contains(matrix.container, 'alpine')
-        run: apk add --no-cache libstdc++
-
       - name: Install wheel and test
         run: |
-          python -m pip install --upgrade pip
-          pip install pytest
-          pip install --no-index --find-links dist gltf_draco_transcoder
-          pytest tests/
+          if [[ -n "${{ matrix.container }}" && "${{ matrix.container }}" == *"alpine"* ]]; then
+            docker run --rm -v $GITHUB_WORKSPACE:/workspace -w /workspace ${{ matrix.container }} bash -c "
+              apk add --no-cache libstdc++
+              bash scripts/test_wheels.sh
+            "
+          else
+            bash scripts/test_wheels.sh
+          fi
 
   build_sdist:
     name: Build source distribution
