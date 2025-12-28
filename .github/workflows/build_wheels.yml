@@ -103,26 +103,38 @@ jobs:
           # - os: windows-latest
           - os: macos-latest
     steps:
+      - name: Cache wheels
+        id: cache-wheels
+        uses: actions/cache@v4
+        with:
+          path: ./wheelhouse
+          key: cibw-wheels-${{ matrix.os }}-${{ github.sha }}
+
       - name: Checkout Source Code
+        if: steps.cache-wheels.outputs.cache-hit != 'true'
         uses: actions/checkout@v4
 
       - name: Download Draco SDK
+        if: steps.cache-wheels.outputs.cache-hit != 'true'
         uses: actions/download-artifact@v4
         with:
           name: draco-sdk-${{ matrix.os }}
           path: ${{ env.DRACO_SDK_REL_PATH }}
 
       - name: Set up Python
+        if: steps.cache-wheels.outputs.cache-hit != 'true'
         uses: actions/setup-python@v4
         with:
           python-version: "3.11"
 
       - name: Install dependencies
+        if: steps.cache-wheels.outputs.cache-hit != 'true'
         run: |
           python -m pip install --upgrade pip
           pip install cibuildwheel
 
       - name: Build wheels
+        if: steps.cache-wheels.outputs.cache-hit != 'true'
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
           DRACO_SDK_PATH: ${{ github.workspace }}/${{ env.DRACO_SDK_REL_PATH }}
@@ -145,6 +157,10 @@ jobs:
           - os: ubuntu-24.04-arm
           # - os: windows-latest
           - os: macos-latest
+          # - os: ubuntu-24.04-latest
+          #   container: python:3.11-alpine
+          - os: ubuntu-24.04-arm
+            container: python:3.11-alpine
     steps:
       - uses: actions/checkout@v4
 
@@ -154,15 +170,20 @@ jobs:
           path: dist/
 
       - name: Set up Python
+        if: matrix.container == '' || !contains(matrix.container, 'python')
         uses: actions/setup-python@v4
         with:
           python-version: "3.11"
+
+      - name: Install dependencies (Alpine)
+        if: contains(matrix.container, 'alpine')
+        run: apk add --no-cache libstdc++
 
       - name: Install wheel and test
         run: |
           python -m pip install --upgrade pip
           pip install pytest
-          pip install dist/*.whl
+          pip install --no-index --find-links dist gltf_draco_transcoder
           pytest tests/
 
   build_sdist:
