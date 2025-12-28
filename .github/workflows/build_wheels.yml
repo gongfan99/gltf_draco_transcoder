@@ -54,13 +54,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: google/draco
-          path: draco-src
+          path: draco_src
           ref: ${{ env.DRACO_VERSION }}
           submodules: true
 
       - name: Configure CMake for Draco SDK
         if: steps.cache-sdk.outputs.cache-hit != 'true'
-        working-directory: draco-src
+        working-directory: draco_src
         shell: bash
         run: |
           if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
@@ -73,18 +73,18 @@ jobs:
             -DDRACO_TRANSCODER_SUPPORTED=ON \
             -DDRACO_BUILD_EXECUTABLES=OFF \
             -DBUILD_SHARED_LIBS=OFF \
-            -DCMAKE_INSTALL_PREFIX=../${{ env.DRACO_SDK_REL_PATH }} \
+            -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/${{ env.DRACO_SDK_REL_PATH }} \
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
 
       - name: Build Draco SDK (static library)
         if: steps.cache-sdk.outputs.cache-hit != 'true'
-        working-directory: draco-src/_gh_draco_sdk_build
+        working-directory: draco_src/_gh_draco_sdk_build
         run: cmake --build . --target ${{ matrix.sdk_target }} ${{ matrix.cmake_build_args }}
 
       - name: Create SDK package
         if: steps.cache-sdk.outputs.cache-hit != 'true'
-        working-directory: draco-src
+        working-directory: draco_src
         shell: bash
         run: ${{ matrix.package_commands }}
 
