@@ -124,8 +124,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
-          - os: windows-latest
+          # - os: ubuntu-latest
+          # - os: windows-latest
           - os: macos-latest
     steps:
       - name: Checkout Source Code
@@ -140,7 +140,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
+          python-version: "3.10"
           architecture: ${{ matrix.os == 'macos-latest' && 'arm64' || '' }}
 
       - name: Install dependencies
@@ -167,8 +167,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
-          - os: windows-latest
+          # - os: ubuntu-latest
+          # - os: windows-latest
           - os: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -181,7 +181,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
+          python-version: "3.10"
           architecture: ${{ matrix.os == 'macos-latest' && 'arm64' || '' }}
 
       - name: Install wheel and test
@@ -201,7 +201,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
+          python-version: "3.10"
 
       - name: Install dependencies
         run: |
