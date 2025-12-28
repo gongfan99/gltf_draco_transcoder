@@ -68,7 +68,7 @@ jobs:
             -DDRACO_TRANSCODER_SUPPORTED=ON \
             -DDRACO_BUILD_EXECUTABLES=OFF \
             -DBUILD_SHARED_LIBS=OFF \
-            -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/${{ env.DRACO_SDK_REL_PATH }} \
+            -DCMAKE_INSTALL_PREFIX=../../${{ env.DRACO_SDK_REL_PATH }} \
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
 
@@ -83,9 +83,9 @@ jobs:
         shell: bash
         run: |
           cmake --install _gh_draco_sdk_build
-          cp -r third_party/eigen/Eigen ${{ github.workspace }}/${{ env.DRACO_SDK_REL_PATH }}/include/
-          cp -r third_party/filesystem/include/ghc ${{ github.workspace }}/${{ env.DRACO_SDK_REL_PATH }}/include/
-          cp third_party/tinygltf/*.h third_party/tinygltf/*.hpp ${{ github.workspace }}/${{ env.DRACO_SDK_REL_PATH }}/include/ 2>/dev/null || true
+          cp -r third_party/eigen/Eigen ../../${{ env.DRACO_SDK_REL_PATH }}/include/
+          cp -r third_party/filesystem/include/ghc ../../${{ env.DRACO_SDK_REL_PATH }}/include/
+          cp third_party/tinygltf/*.h third_party/tinygltf/*.hpp ../../${{ env.DRACO_SDK_REL_PATH }}/include/ 2>/dev/null || true
 
       - name: Upload SDK as artifact
         uses: actions/upload-artifact@v4

@@ -47,6 +47,7 @@ DRACO_SDK_PATH = "$DRACO_SDK_PATH"
 
 [tool.cibuildwheel.linux]
 manylinux-x86_64-image = "manylinux_2_28"
+manylinux-aarch64-image = "manylinux_2_28"
 
 [tool.setuptools-scm]
 version_scheme = "guess-next-dev"
