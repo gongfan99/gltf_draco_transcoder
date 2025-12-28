@@ -80,10 +80,9 @@ jobs:
         shell: bash
         run: |
           cmake --install _gh_draco_sdk_build
-          mkdir -p ../../${{ env.DRACO_SDK_REL_PATH }}/include/
-          cp -r third_party/eigen/Eigen ../../${{ env.DRACO_SDK_REL_PATH }}/include/
-          cp -r third_party/filesystem/include/ghc ../../${{ env.DRACO_SDK_REL_PATH }}/include/
-          cp third_party/tinygltf/*.h third_party/tinygltf/*.hpp ../../${{ env.DRACO_SDK_REL_PATH }}/include/ 2>/dev/null || true
+          cp -r third_party/eigen/Eigen ../${{ env.DRACO_SDK_REL_PATH }}/include/
+          cp -r third_party/filesystem/include/ghc ../${{ env.DRACO_SDK_REL_PATH }}/include/
+          cp third_party/tinygltf/*.h third_party/tinygltf/*.hpp ../${{ env.DRACO_SDK_REL_PATH }}/include/ 2>/dev/null || true
 
       - name: Upload SDK as artifact
         uses: actions/upload-artifact@v4
