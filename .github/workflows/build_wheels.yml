@@ -156,11 +156,12 @@ jobs:
           python-version: "3.11"
 
       - name: Install wheel and test
+        shell: bash
         run: |
           if [[ -n "${{ matrix.container }}" && "${{ matrix.container }}" == *"alpine"* ]]; then
-            docker run --rm -v $GITHUB_WORKSPACE:/workspace -w /workspace ${{ matrix.container }} bash -c "
+            docker run --rm -v $GITHUB_WORKSPACE:/workspace -w /workspace ${{ matrix.container }} sh -c "
               apk add --no-cache libstdc++
-              bash scripts/test_wheels.sh
+              sh scripts/test_wheels.sh
             "
           else
             bash scripts/test_wheels.sh
