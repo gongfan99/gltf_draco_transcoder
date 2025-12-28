@@ -43,6 +43,14 @@ jobs:
           ref: ${{ env.DRACO_VERSION }}
           submodules: true
 
+      - name: Checkout scripts only
+        if: steps.cache-sdk.outputs.cache-hit != 'true'
+        uses: actions/checkout@v4
+        with:
+          path: my_project_scripts
+          sparse-checkout: scripts
+          sparse-checkout-cone-mode: false
+
       - name: Build Draco SDK
         if: steps.cache-sdk.outputs.cache-hit != 'true'
         env:
@@ -51,9 +59,9 @@ jobs:
           DRACO_SDK_REL_PATH: ${{ env.DRACO_SDK_REL_PATH }}
         run: |
           if [ -n "${{ matrix.container }}" ]; then
-            docker run --rm -e CMAKE_GENERATOR -e CMAKE_BUILD_ARGS -e DRACO_SDK_REL_PATH -v $GITHUB_WORKSPACE:/workspace -w /workspace ${{ matrix.container }} bash scripts/build_draco_sdk.sh
+            docker run --rm -e CMAKE_GENERATOR -e CMAKE_BUILD_ARGS -e DRACO_SDK_REL_PATH -v $GITHUB_WORKSPACE:/workspace -w /workspace ${{ matrix.container }} bash my_project_scripts/scripts/build_draco_sdk.sh
           else
-            bash scripts/build_draco_sdk.sh
+            bash my_project_scripts/scripts/build_draco_sdk.sh
           fi
 
       - name: Upload SDK as artifact
