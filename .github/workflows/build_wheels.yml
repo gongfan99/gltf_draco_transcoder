@@ -8,7 +8,7 @@ on:
 
 env:
   DRACO_VERSION: main
-  DRACO_SDK_REL_PATH: sdk
+  DRACO_SDK_REL_PATH: draco_sdk
 
 jobs:
   build-draco-sdk:
@@ -19,46 +19,25 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
-            container: quay.io/pypa/manylinux_2_28_x86_64
-            cmake_generator: "Unix Makefiles"
-            cmake_build_args: "-- -j2"
-            sdk_target: draco_static
-            lib_name: libdraco.a
-            package_commands: |
-              mkdir -p ../sdk/lib ../sdk/include
-              cp _gh_sdk_build/libdraco.a ../sdk/lib/
-              cp -r src/draco ../sdk/include/
-              cp _gh_sdk_build/draco/draco_features.h ../sdk/include/draco/
-              cp -r third_party/eigen/Eigen ../sdk/include/
-              cp -r third_party/filesystem/include/ghc ../sdk/include/
-              cp third_party/tinygltf/*.h third_party/tinygltf/*.hpp ../sdk/include/ 2>/dev/null || true
-          - os: windows-latest
-            cmake_generator: "Visual Studio 17 2022"
-            cmake_build_args: "--config Release"
-            sdk_target: draco
-            lib_name: draco.lib
-            package_commands: |
-              mkdir -p ../sdk/lib ../sdk/include
-              cp _gh_sdk_build/Release/draco.lib ../sdk/lib/
-              cp -r src/draco ../sdk/include/
-              cp _gh_sdk_build/draco/draco_features.h ../sdk/include/draco/
-              cp -r third_party/eigen/Eigen ../sdk/include/
-              cp -r third_party/filesystem/include/ghc ../sdk/include/
-              cp third_party/tinygltf/*.h third_party/tinygltf/*.hpp ../sdk/include/ 2>/dev/null || true
+          # - os: ubuntu-latest
+          #   container: quay.io/pypa/manylinux_2_28_x86_64
+          #   cmake_generator: "Unix Makefiles"
+          #   cmake_build_args: "-- -j2"
+          #   sdk_target: draco_static
+          #   lib_name: libdraco.a
+          #   package_commands: cmake --install _gh_draco_sdk_build
+          # - os: windows-latest
+          #   cmake_generator: "Visual Studio 17 2022"
+          #   cmake_build_args: "--config Release"
+          #   sdk_target: draco
+          #   lib_name: draco.lib
+          #   package_commands: cmake --install _gh_draco_sdk_build
           - os: macos-latest
             cmake_generator: "Unix Makefiles"
             cmake_build_args: "-- -j2"
             sdk_target: draco_static
             lib_name: libdraco.a
-            package_commands: |
-              mkdir -p ../sdk/lib ../sdk/include
-              cp _gh_sdk_build/libdraco.a ../sdk/lib/
-              cp -r src/draco ../sdk/include/
-              cp _gh_sdk_build/draco/draco_features.h ../sdk/include/draco/
-              cp -r third_party/eigen/Eigen ../sdk/include/
-              cp -r third_party/filesystem/include/ghc ../sdk/include/
-              cp third_party/tinygltf/*.h third_party/tinygltf/*.hpp ../sdk/include/ 2>/dev/null || true
+            package_commands: cmake --install _gh_draco_sdk_build
     container: ${{ matrix.container }}
     steps:
       - name: Cache Draco SDK
@@ -69,8 +48,6 @@ jobs:
           key: draco-sdk-${{ matrix.os }}-${{ env.DRACO_VERSION }}
           restore-keys: |
             draco-sdk-${{ matrix.os }}-${{ env.DRACO_VERSION }}
-
-      # manylinux_2_28_x86_64 already has git, gcc, cmake installed
 
       - name: Clone Draco with Submodules
         if: steps.cache-sdk.outputs.cache-hit != 'true'
@@ -89,19 +66,20 @@ jobs:
           if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
             source /opt/rh/gcc-toolset-14/enable || true
           fi
-          mkdir _gh_sdk_build && cd _gh_sdk_build
+          mkdir _gh_draco_sdk_build && cd _gh_draco_sdk_build
           cmake .. -G "${{ matrix.cmake_generator }}" \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DDRACO_TRANSCODER_SUPPORTED=ON \
             -DDRACO_BUILD_EXECUTABLES=OFF \
             -DBUILD_SHARED_LIBS=OFF \
+            -DCMAKE_INSTALL_PREFIX=../${{ env.DRACO_SDK_REL_PATH }} \
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
 
       - name: Build Draco SDK (static library)
         if: steps.cache-sdk.outputs.cache-hit != 'true'
-        working-directory: draco-src/_gh_sdk_build
+        working-directory: draco-src/_gh_draco_sdk_build
         run: cmake --build . --target ${{ matrix.sdk_target }} ${{ matrix.cmake_build_args }}
 
       - name: Create SDK package
