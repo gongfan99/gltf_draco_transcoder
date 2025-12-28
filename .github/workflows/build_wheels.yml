@@ -146,14 +146,14 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
-          - os: ubuntu-24.04-arm
+          # - os: ubuntu-latest
+          # - os: ubuntu-24.04-arm
           - os: windows-latest
-          - os: macos-latest
-          - os: ubuntu-latest
-            container: python:3.11-alpine
-          - os: ubuntu-24.04-arm
-            container: python:3.11-alpine
+          # - os: macos-latest
+          # - os: ubuntu-latest
+          #   container: python:3.11-alpine
+          # - os: ubuntu-24.04-arm
+          #   container: python:3.11-alpine
     steps:
       - uses: actions/checkout@v4
 
