@@ -11,6 +11,7 @@ import json
 import os
 import platform
 import struct
+import sysconfig
 from ctypes import Structure, c_char_p, c_int
 from pathlib import Path
 
@@ -45,27 +46,13 @@ def _load_library() -> ctypes.CDLL:
     # Try to load from the same directory as this file (installed package)
     this_dir = Path(__file__).parent
     candidates = [
-        this_dir / lib_name,
-        this_dir.parent / lib_name,  # Check parent directory
+        Path(__file__).with_name(lib_name),
+        Path(sysconfig.get_paths()["purelib"]) / "gltf_draco_transcoder" / lib_name,
     ]
 
     for candidate in candidates:
         if candidate.exists():
-            return ctypes.CDLL(str(candidate))
-
-    # Try to load from build directory (development)
-    build_dirs = [
-        "build",
-        "cmake-build-release",
-        "cmake-build-debug",
-        "../draco_build",
-        "../build",
-    ]
-
-    for build_dir in build_dirs:
-        full_path = Path(build_dir) / lib_name
-        if full_path.exists():
-            return ctypes.CDLL(str(full_path))
+            return ctypes.CDLL(candidate)
 
     raise RuntimeError(f"Could not find Draco transcoder library: {lib_name}")
 
@@ -107,12 +94,12 @@ def _has_unsupported_primitives(data: bytes) -> bool:
         bool: True if unsupported primitives are found
     """
     if len(data) < 12:
-        return False  # Too short to be valid glB
+        return True  # Too short to be valid glB
 
     # Check magic
     magic = data[:4]
     if magic != b"glTF":
-        return False  # Not a glB file
+        return True  # Not a glB file
 
     try:
         # Parse glB header
@@ -120,32 +107,60 @@ def _has_unsupported_primitives(data: bytes) -> bool:
         total_length = struct.unpack("<I", data[8:12])[0]
 
         if version != 2:
-            return False  # Not glTF 2.0
+            return True  # Not glTF 2.0
 
         # Skip header, read first chunk (JSON)
         offset = 12
         while offset + 8 <= len(data):
-            chunk_type = data[offset : offset + 4]
             chunk_length = struct.unpack("<I", data[offset + 4 : offset + 8])[0]
 
-            if chunk_type == b"JSON":
-                json_data = data[offset + 8 : offset + 8 + chunk_length]
-                gltf_json = json.loads(json_data.decode("utf-8"))
+            # Try to decode as JSON regardless of chunk type (some glB files don't use 'JSON' exactly)
+            try:
+                json_data = data[
+                    offset + 8 : offset + 8 + min(chunk_length, 50000)
+                ]  # Reasonable limit
+                json_str = json_data.decode("utf-8", errors="ignore")
+                # Look for the meshes array
+                if '"meshes"' in json_str:
+                    # Find the start of JSON
+                    json_start = json_str.find("{")
+                    if json_start >= 0:
+                        json_content = json_str[json_start:]
+                        # Try to find a reasonable end
+                        brace_count = 0
+                        end_pos = 0
+                        for i, char in enumerate(json_content):
+                            if char == "{":
+                                brace_count += 1
+                            elif char == "}":
+                                brace_count -= 1
+                                if brace_count == 0:
+                                    end_pos = i + 1
+                                    break
+                        if end_pos > 0:
+                            try:
+                                gltf_json = json.loads(json_content[:end_pos])
 
-                # Check all meshes and primitives
-                for mesh in gltf_json.get("meshes", []):
-                    for primitive in mesh.get("primitives", []):
-                        mode = primitive.get("mode", 4)  # Default is 4 (TRIANGLES)
-                        if mode not in [0, 4]:  # 0=POINTS, 4=TRIANGLES
-                            return True
-                return False  # No unsupported primitives found
+                                # Check all meshes and primitives
+                                for mesh in gltf_json.get("meshes", []):
+                                    for primitive in mesh.get("primitives", []):
+                                        mode = primitive.get(
+                                            "mode", 4
+                                        )  # Default is 4 (TRIANGLES)
+                                        if mode not in [0, 4]:  # 0=POINTS, 4=TRIANGLES
+                                            return True
+                                return False  # No unsupported primitives found
+                            except json.JSONDecodeError:
+                                pass  # Continue to next chunk
+            except UnicodeDecodeError:
+                pass  # Continue to next chunk
 
             offset += 8 + chunk_length
 
-        return False  # No JSON chunk found
+        return True  # No valid JSON chunk found
 
     except (struct.error, json.JSONDecodeError, UnicodeDecodeError):
-        return False  # Invalid glB or JSON
+        return True  # Invalid glB or JSON - treat as unsupported
 
 
 def compress_gltf(

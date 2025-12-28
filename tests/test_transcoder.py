@@ -25,14 +25,14 @@ def test_functions_available():
 def test_compress_box():
     """Test compression of a valid glB file."""
     test_dir = os.path.dirname(__file__)
-    box_glb_path = os.path.join(test_dir, "box.glb")
+    glb_path = os.path.join(test_dir, "partial_cylinder.glb")
 
     # Read original file
-    with open(box_glb_path, "rb") as f:
+    with open(glb_path, "rb") as f:
         original_data = f.read()
 
     # Compress
-    compressed = gdt.compress_gltf(box_glb_path)
+    compressed = gdt.compress_gltf(glb_path)
 
     # Verify compression occurred (output should be smaller)
     compressed_data = compressed.getvalue()
@@ -64,12 +64,12 @@ def test_fallback_box_with_line():
 
 
 def test_roundtrip_box():
-    """Test compress -> decompress roundtrip with box.glb."""
+    """Test compress -> decompress roundtrip glb."""
     test_dir = os.path.dirname(__file__)
-    box_glb_path = os.path.join(test_dir, "box.glb")
+    glb_path = os.path.join(test_dir, "partial_cylinder.glb")
 
     # Compress
-    compressed = gdt.compress_gltf(box_glb_path)
+    compressed = gdt.compress_gltf(glb_path)
 
     # Decompress
     decompressed = gdt.decompress_gltf(compressed)
