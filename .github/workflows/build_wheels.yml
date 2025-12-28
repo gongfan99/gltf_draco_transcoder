@@ -20,17 +20,21 @@ jobs:
           - os: ubuntu-latest
             container: quay.io/pypa/manylinux_2_28_x86_64
             cmake_generator: "Unix Makefiles"
-            cmake_build_args: "-- -j2"
+            cmake_build_args: "--parallel 2"
+            cmake_install_args: ""
           - os: ubuntu-24.04-arm
             container: quay.io/pypa/manylinux_2_28_aarch64
             cmake_generator: "Unix Makefiles"
-            cmake_build_args: "-- -j4"
+            cmake_build_args: "--parallel 4"
+            cmake_install_args: ""
           - os: windows-latest
             cmake_generator: "Visual Studio 17 2022"
             cmake_build_args: "--config Release"
+            cmake_install_args: "--config Release"
           - os: macos-latest
             cmake_generator: "Unix Makefiles"
-            cmake_build_args: "-- -j2"
+            cmake_build_args: "--parallel 2"
+            cmake_install_args: ""
     steps:
       - name: Cache Draco SDK
         id: cache-sdk
@@ -64,10 +68,11 @@ jobs:
         env:
           CMAKE_GENERATOR: ${{ matrix.cmake_generator }}
           CMAKE_BUILD_ARGS: ${{ matrix.cmake_build_args }}
+          CMAKE_INSTALL_ARGS: ${{ matrix.cmake_install_args }}
           DRACO_SDK_REL_PATH: ${{ env.DRACO_SDK_REL_PATH }}
         run: |
           if [ -n "${{ matrix.container }}" ]; then
-            docker run --rm -e CMAKE_GENERATOR -e CMAKE_BUILD_ARGS -e DRACO_SDK_REL_PATH -v $GITHUB_WORKSPACE:/workspace -w /workspace ${{ matrix.container }} bash my_project_scripts/scripts/build_draco_sdk.sh
+            docker run --rm -e CMAKE_GENERATOR -e CMAKE_BUILD_ARGS -e CMAKE_INSTALL_ARGS -e DRACO_SDK_REL_PATH -v $GITHUB_WORKSPACE:/workspace -w /workspace ${{ matrix.container }} bash my_project_scripts/scripts/build_draco_sdk.sh
           else
             bash my_project_scripts/scripts/build_draco_sdk.sh
           fi

@@ -14,7 +14,7 @@ cmake .. -G "${CMAKE_GENERATOR}" \
   -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
 cmake --build . ${CMAKE_BUILD_ARGS}
 cd ..
-cmake --install _gh_draco_sdk_build ${CMAKE_BUILD_ARGS}
+cmake --install _gh_draco_sdk_build ${CMAKE_INSTALL_ARGS}
 cp -r third_party/eigen/Eigen ../${DRACO_SDK_REL_PATH}/include/
 cp -r third_party/filesystem/include/ghc ../${DRACO_SDK_REL_PATH}/include/
 cp third_party/tinygltf/*.h third_party/tinygltf/*.hpp ../${DRACO_SDK_REL_PATH}/include/ 2>/dev/null || true
