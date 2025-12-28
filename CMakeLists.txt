@@ -46,7 +46,6 @@ target_include_directories(draco_transcoder_shared PUBLIC
 set_target_properties(draco_transcoder_shared PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
-    # Ensure PIC for shared libraries
     POSITION_INDEPENDENT_CODE ON
 )
 

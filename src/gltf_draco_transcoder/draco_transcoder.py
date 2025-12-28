@@ -7,8 +7,10 @@ This module provides a simple interface to compress glTF files using Draco compr
 
 import ctypes
 import io
+import json
 import os
 import platform
+import struct
 from ctypes import Structure, c_char_p, c_int
 from pathlib import Path
 
@@ -28,7 +30,7 @@ class DracoOptions(Structure):
     ]
 
 
-def _load_library():
+def _load_library() -> ctypes.CDLL:
     """Load the Draco transcoder shared library."""
     system = platform.system().lower()
     lib_name = "draco_transcoder_shared"
@@ -94,7 +96,69 @@ _lib.draco_free_buffer.argtypes = [ctypes.c_void_p]
 _lib.draco_free_buffer.restype = None
 
 
-def compress_gltf(input_data, qp=11, qt=10, qn=8, qc=8, qtg=8, qw=8, qg=8, cl=7):
+def _has_unsupported_primitives(data: bytes) -> bool:
+    """
+    Check if the glB data contains any primitives with modes other than 0 (POINTS) or 4 (TRIANGLES).
+
+    Args:
+        data (bytes): The glB binary data
+
+    Returns:
+        bool: True if unsupported primitives are found
+    """
+    if len(data) < 12:
+        return False  # Too short to be valid glB
+
+    # Check magic
+    magic = data[:4]
+    if magic != b"glTF":
+        return False  # Not a glB file
+
+    try:
+        # Parse glB header
+        version = struct.unpack("<I", data[4:8])[0]
+        total_length = struct.unpack("<I", data[8:12])[0]
+
+        if version != 2:
+            return False  # Not glTF 2.0
+
+        # Skip header, read first chunk (JSON)
+        offset = 12
+        while offset + 8 <= len(data):
+            chunk_type = data[offset : offset + 4]
+            chunk_length = struct.unpack("<I", data[offset + 4 : offset + 8])[0]
+
+            if chunk_type == b"JSON":
+                json_data = data[offset + 8 : offset + 8 + chunk_length]
+                gltf_json = json.loads(json_data.decode("utf-8"))
+
+                # Check all meshes and primitives
+                for mesh in gltf_json.get("meshes", []):
+                    for primitive in mesh.get("primitives", []):
+                        mode = primitive.get("mode", 4)  # Default is 4 (TRIANGLES)
+                        if mode not in [0, 4]:  # 0=POINTS, 4=TRIANGLES
+                            return True
+                return False  # No unsupported primitives found
+
+            offset += 8 + chunk_length
+
+        return False  # No JSON chunk found
+
+    except (struct.error, json.JSONDecodeError, UnicodeDecodeError):
+        return False  # Invalid glB or JSON
+
+
+def compress_gltf(
+    input_data: str | io.BytesIO,
+    qp: int = 11,
+    qt: int = 10,
+    qn: int = 8,
+    qc: int = 8,
+    qtg: int = 8,
+    qw: int = 8,
+    qg: int = 8,
+    cl: int = 7,
+) -> io.BytesIO:
     """
     Compress glTF data using Draco compression.
 
@@ -142,6 +206,15 @@ def compress_gltf(input_data, qp=11, qt=10, qn=8, qc=8, qtg=8, qw=8, qg=8, cl=7)
     input_bytes = input_buffer.getvalue()
     input_size = len(input_bytes)
 
+    # Check for unsupported primitives (skip compression if found)
+    if _has_unsupported_primitives(input_bytes):
+        print(
+            "Warning: Input contains unsupported primitive types (only TRIANGLES and POINTS are supported). Returning original data unchanged."
+        )
+        # Return a copy of the input data
+        input_buffer.seek(0)
+        return io.BytesIO(input_buffer.read())
+
     # Call the C function
     output_size = ctypes.c_size_t()
     result = _lib.draco_transcode_gltf_from_buffer(
@@ -160,7 +233,7 @@ def compress_gltf(input_data, qp=11, qt=10, qn=8, qc=8, qtg=8, qw=8, qg=8, cl=7)
         _lib.draco_free_buffer(result)
 
 
-def decompress_gltf(input_data):
+def decompress_gltf(input_data: str | io.BytesIO) -> io.BytesIO:
     """
     Decompress Draco-compressed glTF data to uncompressed glTF.
 

@@ -17,46 +17,54 @@
 
 #include <stddef.h>
 
-#ifdef __cplusplus
-extern "C" {
+#ifdef _WIN32
+#define DRACO_API __declspec(dllexport)
+#else
+#define DRACO_API
 #endif
 
-// C-compatible struct for Draco compression options.
-// Mirrors the command-line options from draco_transcoder.cc
-typedef struct {
-  int quantization_position;   // -qp, default 11
-  int quantization_tex_coord;  // -qt, default 10
-  int quantization_normal;     // -qn, default 8
-  int quantization_color;      // -qc, default 8
-  int quantization_tangent;    // -qtg, default 8
-  int quantization_weight;     // -qw, default 8
-  int quantization_generic;    // -qg, default 8
-  int compression_level;       // compression level, default 7
-} DracoOptions;
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
-// Transcodes a glTF file to Draco compressed glTF.
-// Returns 0 on success, non-zero on error.
-int draco_transcode_gltf(const char *input_filename,
-                         const char *output_filename, DracoOptions *options);
+  // C-compatible struct for Draco compression options.
+  // Mirrors the command-line options from draco_transcoder.cc
+  typedef struct
+  {
+    int quantization_position;  // -qp, default 11
+    int quantization_tex_coord; // -qt, default 10
+    int quantization_normal;    // -qn, default 8
+    int quantization_color;     // -qc, default 8
+    int quantization_tangent;   // -qtg, default 8
+    int quantization_weight;    // -qw, default 8
+    int quantization_generic;   // -qg, default 8
+    int compression_level;      // compression level, default 7
+  } DracoOptions;
 
-// Transcodes glTF data from a memory buffer to Draco compressed glTF.
-// Returns a pointer to the output buffer on success, NULL on error.
-// The caller must free the returned buffer using draco_free_buffer().
-void *draco_transcode_gltf_from_buffer(const void *input_data,
-                                       size_t input_size, DracoOptions *options,
-                                       size_t *output_size);
+  // Transcodes a glTF file to Draco compressed glTF.
+  // Returns 0 on success, non-zero on error.
+  DRACO_API int draco_transcode_gltf(const char *input_filename,
+                                     const char *output_filename, DracoOptions *options);
 
-// Decompresses Draco compressed glTF data to uncompressed glTF.
-// Returns a pointer to the output buffer on success, NULL on error.
-// The caller must free the returned buffer using draco_free_buffer().
-void *draco_decompress_gltf_to_buffer(const void *input_data, size_t input_size,
-                                      size_t *output_size);
+  // Transcodes glTF data from a memory buffer to Draco compressed glTF.
+  // Returns a pointer to the output buffer on success, NULL on error.
+  // The caller must free the returned buffer using draco_free_buffer().
+  DRACO_API void *draco_transcode_gltf_from_buffer(const void *input_data,
+                                                   size_t input_size, DracoOptions *options,
+                                                   size_t *output_size);
 
-// Frees a buffer allocated by the C API functions.
-void draco_free_buffer(void *buffer);
+  // Decompresses Draco compressed glTF data to uncompressed glTF.
+  // Returns a pointer to the output buffer on success, NULL on error.
+  // The caller must free the returned buffer using draco_free_buffer().
+  DRACO_API void *draco_decompress_gltf_to_buffer(const void *input_data, size_t input_size,
+                                                  size_t *output_size);
+
+  // Frees a buffer allocated by the C API functions.
+  DRACO_API void draco_free_buffer(void *buffer);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // DRACO_TOOLS_DRACO_TRANSCODER_C_API_H_
+#endif // DRACO_TOOLS_DRACO_TRANSCODER_C_API_H_

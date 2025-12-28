@@ -42,3 +42,8 @@
 
 sdk/
 build/
+dist/
+py/
+src/gltf_draco_transcoder/*.dll
+src/gltf_draco_transcoder/*.glb
+build.bat

@@ -15,6 +15,7 @@
 #include "draco_transcoder_c_api.h"
 
 #include <cstdlib>
+#include <cstdio>
 
 #include "draco/core/decoder_buffer.h"
 #include "draco/core/encoder_buffer.h"
@@ -62,6 +63,7 @@ extern "C"
     const draco::Status check_status = transcode_options.geometry.Check();
     if (!check_status.ok())
     {
+      fprintf(stderr, "Invalid options: %s\n", check_status.error_msg());
       return -2; // Invalid options
     }
 
@@ -70,6 +72,7 @@ extern "C"
         draco::DracoTranscoder::Create(transcode_options);
     if (!dt_result.ok())
     {
+      fprintf(stderr, "Failed to create transcoder: %s\n", dt_result.status().error_msg());
       return -3; // Failed to create transcoder
     }
 
@@ -78,6 +81,7 @@ extern "C"
     const draco::Status transcode_status = dt->Transcode(file_options);
     if (!transcode_status.ok())
     {
+      fprintf(stderr, "Transcoding failed: %s\n", transcode_status.error_msg());
       return -4; // Transcoding failed
     }
 
@@ -117,6 +121,7 @@ extern "C"
     const draco::Status check_status = transcode_options.geometry.Check();
     if (!check_status.ok())
     {
+      fprintf(stderr, "Invalid options: %s\n", check_status.error_msg());
       return nullptr; // Invalid options
     }
 
@@ -129,6 +134,7 @@ extern "C"
         decoder.DecodeFromBufferToScene(&input_buffer);
     if (!scene_result.ok())
     {
+      fprintf(stderr, "Decoding failed: %s\n", scene_result.status().error_msg());
       return nullptr; // Decoding failed
     }
     std::unique_ptr<draco::Scene> scene = std::move(scene_result).value();
@@ -143,6 +149,7 @@ extern "C"
     draco::Status encode_status = encoder.EncodeToBuffer(*scene, &output_buffer);
     if (!encode_status.ok())
     {
+      fprintf(stderr, "Encoding failed: %s\n", encode_status.error_msg());
       return nullptr; // Encoding failed
     }
 
@@ -178,6 +185,7 @@ extern "C"
         decoder.DecodeFromBufferToScene(&input_buffer);
     if (!scene_result.ok())
     {
+      fprintf(stderr, "Decoding failed: %s\n", scene_result.status().error_msg());
       return nullptr; // Decoding failed
     }
     std::unique_ptr<draco::Scene> scene = std::move(scene_result).value();
@@ -188,6 +196,7 @@ extern "C"
     draco::Status encode_status = encoder.EncodeToBuffer(*scene, &output_buffer);
     if (!encode_status.ok())
     {
+      fprintf(stderr, "Encoding failed: %s\n", encode_status.error_msg());
       return nullptr; // Encoding failed
     }
 

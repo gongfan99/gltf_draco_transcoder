@@ -35,12 +35,11 @@ cmake.args = [
     "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
 ]
 build.targets = ["install"]
-# Ensure the library is installed into the package directory
-wheel.install-dir = "src/gltf_draco_transcoder"
+wheel.install-dir = "gltf_draco_transcoder"
 wheel.py-api = "py3"
 
 [tool.cibuildwheel]
-build = ["cp310-*"]
+build = ["cp311-*"]
 skip = ["*-win32", "*-manylinux_i686", "*-musllinux_i686"]
 
 [tool.cibuildwheel.environment]
