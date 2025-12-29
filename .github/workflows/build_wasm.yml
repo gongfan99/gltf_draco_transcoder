@@ -9,10 +9,9 @@ on:
   workflow_dispatch:
 
 env:
-  EM_VERSION: 4.0.22
+  EM_VERSION: latest
   EM_CACHE_FOLDER: "emsdk-cache"
   VCPKG_VERSION: master
-  VCPKG_ROOT: ${{ github.workspace }}/vcpkg
   VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/vcpkg_cache,readwrite"
 
 jobs:
@@ -24,37 +23,60 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: mymindstorm/setup-emsdk@v14
-        with:
-          version: ${{ env.EM_VERSION }}
-          actions-cache-folder: ${{ env.EM_CACHE_FOLDER }}
-
-      - name: Cache vcpkg binaries
+      - name: Cache EMSDK
+        id: cache-emsdk
         uses: actions/cache@v4
         with:
-          path: ${{ github.workspace }}/vcpkg_cache
-          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
-          restore-keys: |
-            vcpkg-${{ runner.os }}-
+          path: emsdk
+          key: emsdk-${{ runner.os }}-${{ env.EM_VERSION }}
 
-      - name: Configure CMake and Build
+      - name: Clone EMSDK
+        if: steps.cache-emsdk.outputs.cache-hit != 'true'
+        run: git clone https://github.com/emscripten-core/emsdk.git
+
+      - name: Install and activate EMSDK
         run: |
-          cmake -B build \
-            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
-            -DVCPKG_OVERLAY_TRIPLETS=${{ github.workspace }}/vcpkg-triplets \
-            -DVCPKG_OVERLAY_PORTS=${{ github.workspace }}/vcpkg-overlays \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
-            -DVCPKG_TARGET_TRIPLET=wasm32-emscripten-lto
-          cmake --build build --config Release
+          cd emsdk
+          if [ "${{ steps.cache-emsdk.outputs.cache-hit }}" != "true" ]; then
+            ./emsdk update
+            ./emsdk install ${{ env.EM_VERSION }}
+            ./emsdk activate ${{ env.EM_VERSION }}
+          fi
+          # echo "${{ github.workspace }}/emsdk" >> $GITHUB_PATH
+          # echo "EMSDK=${{ github.workspace }}/emsdk" >> $GITHUB_ENV
 
-      - name: Upload WASM artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: wasm-build
-          # path: |
-          #   build/*.wasm
-          #   build/*.js
-          #   build/*.mjs
-          path: build/
-          retention-days: 2
+      - name: Setup EMSDK
+        run: source ./emsdk_env.sh
+
+      # - name: Cache vcpkg binaries
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: ${{ github.workspace }}/vcpkg_cache
+      #     key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
+      #     restore-keys: |
+      #       vcpkg-${{ runner.os }}-
+
+      # - name: Export VCPKG_ROOT
+      #   run: echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
+
+      # - name: Configure CMake and Build
+      #   run: |
+      #     cmake -B build \
+      #       -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
+      #       -DVCPKG_OVERLAY_TRIPLETS=${{ github.workspace }}/vcpkg-triplets \
+      #       -DVCPKG_OVERLAY_PORTS=${{ github.workspace }}/vcpkg-overlays \
+      #       -DCMAKE_BUILD_TYPE=Release \
+      #       -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
+      #       -DVCPKG_TARGET_TRIPLET=wasm32-emscripten-lto
+      #     cmake --build build --config Release
+
+      # - name: Upload WASM artifacts
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: wasm-build
+      #     # path: |
+      #     #   build/*.wasm
+      #     #   build/*.js
+      #     #   build/*.mjs
+      #     path: build/
+      #     retention-days: 2
