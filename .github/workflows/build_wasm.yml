@@ -68,7 +68,6 @@ jobs:
             -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
             -DVCPKG_OVERLAY_TRIPLETS=${{ github.workspace }}/vcpkg-triplets \
             -DVCPKG_OVERLAY_PORTS=${{ github.workspace }}/vcpkg-overlays \
-            -DEMSDK_PATH=$EMSDK \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
             -DVCPKG_TARGET_TRIPLET=wasm32-emscripten-lto
