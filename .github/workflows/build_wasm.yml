@@ -45,6 +45,7 @@ jobs:
           echo "PATH=$PATH" >> $GITHUB_ENV
           echo "$EMSDK" >> $GITHUB_PATH
           echo "EMSDK=$EMSDK" >> $GITHUB_ENV
+          echo "EM_CONFIG=$EM_CONFIG" >> $GITHUB_ENV
           echo "EMSDK_NODE=$EMSDK_NODE" >> $GITHUB_ENV
           echo "EMSDK_PYTHON=$EMSDK_PYTHON" >> $GITHUB_ENV
 
