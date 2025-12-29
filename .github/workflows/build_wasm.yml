@@ -38,26 +38,26 @@ jobs:
       # - name: Setup vcpkg
       #   uses: lukka/run-vcpkg@v11
 
-      - name: Configure CMake
-        run: |
-          emcmake cmake -B build \
-            -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
-            -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
-            -DVCPKG_OVERLAY_TRIPLETS=${{ github.workspace }}/vcpkg-triplets \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
-            -DVCPKG_TARGET_TRIPLET=wasm32-emscripten-lto
+      # - name: Configure CMake
+      #   run: |
+      #     emcmake cmake -B build \
+      #       -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
+      #       -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
+      #       -DVCPKG_OVERLAY_TRIPLETS=${{ github.workspace }}/vcpkg-triplets \
+      #       -DCMAKE_BUILD_TYPE=Release \
+      #       -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
+      #       -DVCPKG_TARGET_TRIPLET=wasm32-emscripten-lto
 
-      - name: Build
-        run: cmake --build build --config Release
+      # - name: Build
+      #   run: cmake --build build --config Release
 
-      - name: Upload WASM artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: wasm-build
-          # path: |
-          #   build/*.wasm
-          #   build/*.js
-          #   build/*.mjs
-          path: build/
-          retention-days: 2
+      # - name: Upload WASM artifacts
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: wasm-build
+      #     # path: |
+      #     #   build/*.wasm
+      #     #   build/*.js
+      #     #   build/*.mjs
+      #     path: build/
+      #     retention-days: 2
