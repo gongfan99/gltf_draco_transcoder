@@ -37,9 +37,6 @@ jobs:
           restore-keys: |
             vcpkg-${{ runner.os }}-
 
-      - name: Bootstrap vcpkg
-        run: ./vcpkg/bootstrap-vcpkg.sh
-
       - name: Configure CMake and Build
         run: |
           cmake -B build \
