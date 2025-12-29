@@ -48,7 +48,7 @@ jobs:
           cmake -B build \
             -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
             -DVCPKG_OVERLAY_TRIPLETS=${{ github.workspace }}/vcpkg-triplets \
-            -DVCPKG_OVERLAY_PORTS=${{ github.workspace }}/vcpkg-overlays
+            -DVCPKG_OVERLAY_PORTS=${{ github.workspace }}/vcpkg-overlays \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
             -DVCPKG_TARGET_TRIPLET=wasm32-emscripten-lto
