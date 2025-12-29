@@ -70,7 +70,7 @@ jobs:
             -DVCPKG_OVERLAY_PORTS=${{ github.workspace }}/vcpkg-overlays \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
-            -DVCPKG_TARGET_TRIPLET=wasm32-emscripten-lto
+            -DVCPKG_TARGET_TRIPLET=wasm32-emscripten
           cmake --build build --config Release
 
       - name: Upload WASM artifacts

@@ -1,8 +1,7 @@
 vcpkg_from_git(
     OUT_SOURCE_PATH SOURCE_PATH
     URL https://github.com/google/draco.git
-    REF 4e12ab297746401666e06b3a987d377400d70b74
-    # SHA512 ... (Add after first fail)
+    REF 3abbc66fdf5597b1560c44ce7840aac76900b3f7
 )
 
 vcpkg_cmake_configure(
