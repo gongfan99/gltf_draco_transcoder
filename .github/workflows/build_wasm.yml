@@ -63,7 +63,7 @@ jobs:
       - name: Configure CMake and Build
         run: |
           source emsdk/emsdk_env.sh
-          export VCPKG_ENV_PASSTHROUGH="EMSDK"
+          export VCPKG_ENV_PASSTHROUGH="EMSDK;EMSCRIPTEN"
           cmake -B build \
             -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
             -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
@@ -73,6 +73,10 @@ jobs:
             -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
             -DVCPKG_TARGET_TRIPLET=wasm32-emscripten
           cmake --build build --config Release
+
+      - name: Debug Failure Logs
+        if: failure()
+        run: cat /usr/local/share/vcpkg/buildtrees/draco/config-wasm32-emscripten-rel-out.log
 
       - name: Upload WASM artifacts
         uses: actions/upload-artifact@v4
