@@ -40,41 +40,42 @@ jobs:
             ./emsdk activate ${{ env.EM_VERSION }}
           fi
 
-      - name: Verify EMSDK
+      # - name: Verify EMSDK
+      #   run: |
+      #     source emsdk/emsdk_env.sh
+      #     echo "EMSDK: $EMSDK"
+      #     emcc -v
+
+      - name: Cache vcpkg binaries
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/vcpkg_cache
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-
+
+      - name: Export VCPKG_ROOT
+        run: echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
+
+      - name: Configure CMake and Build
         run: |
           source emsdk/emsdk_env.sh
-          echo "EMSDK: $EMSDK"
-          emcc -v
+          cmake -B build \
+            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
+            -DVCPKG_OVERLAY_TRIPLETS=${{ github.workspace }}/vcpkg-triplets \
+            -DVCPKG_OVERLAY_PORTS=${{ github.workspace }}/vcpkg-overlays \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
+            -DVCPKG_TARGET_TRIPLET=wasm32-emscripten-lto
+          cmake --build build --config Release
 
-      # - name: Cache vcpkg binaries
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: ${{ github.workspace }}/vcpkg_cache
-      #     key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
-      #     restore-keys: |
-      #       vcpkg-${{ runner.os }}-
-
-      # - name: Export VCPKG_ROOT
-      #   run: echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
-
-      # - name: Configure CMake and Build
-      #   run: |
-      #     cmake -B build \
-      #       -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
-      #       -DVCPKG_OVERLAY_TRIPLETS=${{ github.workspace }}/vcpkg-triplets \
-      #       -DVCPKG_OVERLAY_PORTS=${{ github.workspace }}/vcpkg-overlays \
-      #       -DCMAKE_BUILD_TYPE=Release \
-      #       -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
-      #       -DVCPKG_TARGET_TRIPLET=wasm32-emscripten-lto
-      #     cmake --build build --config Release
-
-      # - name: Upload WASM artifacts
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: wasm-build
-      #     # path: |
-      #     #   build/*.wasm
-      #     #   build/*.js
-      #     #   build/*.mjs
-      #     path: build/
-      #     retention-days: 2
+      - name: Upload WASM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-build
+          # path: |
+          #   build/*.wasm
+          #   build/*.js
+          #   build/*.mjs
+          path: build/
+          retention-days: 2
