@@ -41,7 +41,7 @@ jobs:
 
       - name: Setup EMSDK env
         run: |
-          source ./emsdk_env.sh
+          source emsdk/emsdk_env.sh
           echo "PATH=$PATH" >> $GITHUB_ENV
           echo "$EMSDK" >> $GITHUB_PATH
           echo "EMSDK=$EMSDK" >> $GITHUB_ENV
