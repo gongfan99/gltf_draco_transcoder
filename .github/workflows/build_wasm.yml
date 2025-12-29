@@ -41,9 +41,8 @@ jobs:
             ./emsdk install ${{ env.EM_VERSION }}
             ./emsdk activate ${{ env.EM_VERSION }}
           fi
-
-      - name: Setup EMSDK
-        run: source ./emsdk_env.sh
+          echo "${{ github.workspace }}/emsdk" >> $GITHUB_PATH
+          echo "EMSDK=${{ github.workspace }}/emsdk" >> $GITHUB_ENV
 
       - name: Verify EMSDK
         run: |
