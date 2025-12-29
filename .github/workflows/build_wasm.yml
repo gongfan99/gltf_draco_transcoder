@@ -38,15 +38,17 @@ jobs:
         run: |
           cd emsdk
           if [ "${{ steps.cache-emsdk.outputs.cache-hit }}" != "true" ]; then
-            ./emsdk update
             ./emsdk install ${{ env.EM_VERSION }}
             ./emsdk activate ${{ env.EM_VERSION }}
           fi
-          # echo "${{ github.workspace }}/emsdk" >> $GITHUB_PATH
-          # echo "EMSDK=${{ github.workspace }}/emsdk" >> $GITHUB_ENV
 
       - name: Setup EMSDK
         run: source ./emsdk_env.sh
+
+      - name: Verify EMSDK
+        run: |
+          echo "EMSDK: $EMSDK"
+          emcc -v
 
       # - name: Cache vcpkg binaries
       #   uses: actions/cache@v4
