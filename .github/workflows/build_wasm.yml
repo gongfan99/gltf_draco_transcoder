@@ -9,9 +9,7 @@ on:
   workflow_dispatch:
 
 env:
-  EM_VERSION: latest
-  EM_CACHE_FOLDER: "emsdk-cache"
-  VCPKG_VERSION: master
+  EM_VERSION: 4.0.22
   VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/vcpkg_cache,readwrite"
 
 jobs:
@@ -44,10 +42,10 @@ jobs:
           echo "${{ github.workspace }}/emsdk" >> $GITHUB_PATH
           echo "EMSDK=${{ github.workspace }}/emsdk" >> $GITHUB_ENV
 
-      - name: Verify EMSDK
-        run: |
-          echo "EMSDK: $EMSDK"
-          emcc -v
+      # - name: Verify EMSDK
+      #   run: |
+      #     echo "EMSDK: $EMSDK"
+      #     emcc -v
 
       # - name: Cache vcpkg binaries
       #   uses: actions/cache@v4
