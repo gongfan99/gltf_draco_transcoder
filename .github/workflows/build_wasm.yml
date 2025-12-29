@@ -12,14 +12,14 @@ env:
   EM_VERSION: 4.0.22
   EM_CACHE_FOLDER: "emsdk-cache"
   VCPKG_VERSION: master
-  VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+  VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/<OWNER>/index.json,readwrite"
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      actions: write # Required for x-gha caching
+      packages: write
     steps:
       - uses: actions/checkout@v4
 
@@ -43,6 +43,7 @@ jobs:
           cmake -B build \
             -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
             -DVCPKG_OVERLAY_TRIPLETS=${{ github.workspace }}/vcpkg-triplets \
+            -DVCPKG_OVERLAY_PORTS=${{ github.workspace }}/vcpkg-overlays
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
             -DVCPKG_TARGET_TRIPLET=wasm32-emscripten-lto
