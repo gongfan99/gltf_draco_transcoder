@@ -76,7 +76,12 @@ jobs:
 
       - name: Debug Failure Logs
         if: failure()
-        run: cat /usr/local/share/vcpkg/buildtrees/draco/config-wasm32-emscripten-rel-out.log
+        run: |
+          cat /usr/local/share/vcpkg/buildtrees/draco/config-wasm32-emscripten-dbg-CMakeCache.txt.log
+          cat /usr/local/share/vcpkg/buildtrees/draco/config-wasm32-emscripten-rel-CMakeCache.txt.log
+          cat /usr/local/share/vcpkg/buildtrees/draco/config-wasm32-emscripten-dbg-CMakeConfigureLog.yaml.log
+          cat /usr/local/share/vcpkg/buildtrees/draco/config-wasm32-emscripten-rel-CMakeConfigureLog.yaml.log
+          cat /usr/local/share/vcpkg/buildtrees/draco/config-wasm32-emscripten-out.log
 
       - name: Upload WASM artifacts
         uses: actions/upload-artifact@v4
