@@ -14,6 +14,7 @@ vcpkg_cmake_configure(
         -DDRACO_WASM=ON
         -DDRACO_TRANSCODER_SUPPORTED=ON
         -DDRACO_BUILD_EXECUTABLES=OFF
+        -DDRACO_EIGEN_PATH=${CURRENT_INSTALLED_DIR}/include/eigen3
 )
 
 vcpkg_cmake_install()
