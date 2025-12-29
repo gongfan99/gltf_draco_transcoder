@@ -23,6 +23,10 @@ if(DEFINED DRACO_SDK_PATH AND EXISTS "${DRACO_SDK_PATH}")
 
   target_link_libraries(draco_transcoder_shared PRIVATE draco::draco)
 
+  add_executable(draco cpp/draco_selective_prototype.cc)
+
+  target_link_libraries(draco PRIVATE draco::draco)
+
 else()
   message(FATAL_ERROR "DRACO_SDK_PATH is not defined or the path does not exist. Please provide a valid Draco SDK path.")
 endif()

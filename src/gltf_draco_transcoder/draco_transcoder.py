@@ -295,17 +295,24 @@ def decompress_gltf(input_data: str | io.BytesIO) -> io.BytesIO:
         _lib.draco_free_buffer(result)
 
 
-if __name__ == "__main__":
-    # Simple test/example
+def main():
+    """Command-line interface for Draco transcoder."""
     import sys
 
     if len(sys.argv) != 3:
-        print("Usage: python draco_transcoder.py <input.gltf> <output.gltf>")
-        print("Example: python draco_transcoder.py input.gltf output_compressed.gltf")
+        print("Usage: python -m gltf_draco_transcoder <input.gltf> <output.gltf>")
+        print(
+            "Example: python -m gltf_draco_transcoder input.gltf output_compressed.gltf"
+        )
         sys.exit(1)
 
     input_file = sys.argv[1]
     output_file = sys.argv[2]
+
+    # Get input file size
+    input_size = os.path.getsize(input_file)
+    input_size_mb = input_size / (1024 * 1024)
+    print(f"Input file: {input_file} ({input_size_mb:.2f} MB)")
 
     try:
         # Compress the glTF file
@@ -315,14 +322,20 @@ if __name__ == "__main__":
         with open(output_file, "wb") as f:
             f.write(compressed_data.getvalue())
 
-        print(f"Successfully compressed {input_file} to {output_file}")
+        # Get output file size
+        output_size = os.path.getsize(output_file)
+        output_size_mb = output_size / (1024 * 1024)
+        print(f"Output file: {output_file} ({output_size_mb:.2f} MB)")
 
-        # Example of decompression (round-trip test)
-        decompressed_data = decompress_gltf(output_file)
-        print(
-            f"Successfully decompressed back to {len(decompressed_data.getvalue())} bytes"
+        compression_ratio = (
+            (1 - output_size / input_size) * 100 if input_size > 0 else 0
         )
+        print(f"Compression ratio: {compression_ratio:.1f}%")
 
     except Exception as e:
         print(f"Error: {e}")
         sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
