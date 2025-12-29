@@ -26,9 +26,15 @@ else()
   endif()
 endif()
 
-add_library(draco_transcoder_shared SHARED
-    cpp/selective_draco_transcoder.cc
-)
+if (EMSCRIPTEN)
+  add_library(draco_transcoder_shared STATIC
+      cpp/selective_draco_transcoder.cc
+  )
+else()
+  add_library(draco_transcoder_shared SHARED
+      cpp/selective_draco_transcoder.cc
+  )
+endif()
 
 target_link_libraries(draco_transcoder_shared PRIVATE draco::draco)
 
