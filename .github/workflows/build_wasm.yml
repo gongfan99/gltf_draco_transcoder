@@ -33,18 +33,21 @@ jobs:
         run: git clone https://github.com/emscripten-core/emsdk.git
 
       - name: Install and activate EMSDK
+        if: steps.cache-emsdk.outputs.cache-hit != 'true'
         run: |
           cd emsdk
-          if [ "${{ steps.cache-emsdk.outputs.cache-hit }}" != "true" ]; then
-            ./emsdk install ${{ env.EM_VERSION }}
-            ./emsdk activate ${{ env.EM_VERSION }}
-          fi
+          ./emsdk install ${{ env.EM_VERSION }}
+          ./emsdk activate ${{ env.EM_VERSION }}
 
-      # - name: Verify EMSDK
-      #   run: |
-      #     source emsdk/emsdk_env.sh
-      #     echo "EMSDK: $EMSDK"
-      #     emcc -v
+      - name: Setup EMSDK env
+        if: steps.cache-emsdk.outputs.cache-hit != 'true'
+        run: |
+          source ./emsdk_env.sh
+          echo "PATH=$PATH" >> $GITHUB_ENV
+          echo "$EMSDK" >> $GITHUB_PATH
+          echo "EMSDK=$EMSDK" >> $GITHUB_ENV
+          echo "EMSDK_NODE=$EMSDK_NODE" >> $GITHUB_ENV
+          echo "EMSDK_PYTHON=$EMSDK_PYTHON" >> $GITHUB_ENV
 
       - name: Cache vcpkg binaries
         uses: actions/cache@v4
@@ -59,7 +62,6 @@ jobs:
 
       - name: Configure CMake and Build
         run: |
-          source emsdk/emsdk_env.sh
           cmake -B build \
             -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
             -DVCPKG_OVERLAY_TRIPLETS=${{ github.workspace }}/vcpkg-triplets \
