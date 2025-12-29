@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 import pytest
 
@@ -22,51 +22,16 @@ def test_functions_available():
     assert hasattr(gdt, "decompress_gltf")
 
 
-def test_compress_box():
-    """Test compression of a valid glB file."""
-    test_dir = os.path.dirname(__file__)
-    glb_path = os.path.join(test_dir, "partial_cylinder.glb")
+@pytest.mark.parametrize("filename", ["box.glb", "box_with_line.glb"])
+def test_roundtrip(filename):
+    """Test compress -> decompress roundtrip for multiple glB files."""
+    glb_path = Path(__file__).with_name(filename)
 
     # Read original file
     with open(glb_path, "rb") as f:
         original_data = f.read()
 
-    # Compress
-    compressed = gdt.compress_gltf(glb_path)
-
-    # Verify compression occurred (output should be smaller)
-    compressed_data = compressed.getvalue()
-    assert len(compressed_data) < len(
-        original_data
-    ), "Compression should reduce file size"
-
-    # Verify it's still a valid glB (starts with magic)
-    assert compressed_data.startswith(b"glTF"), "Output should be valid glB"
-
-
-def test_fallback_box_with_line():
-    """Test that files with unsupported primitives return original data unchanged."""
-    test_dir = os.path.dirname(__file__)
-    box_with_line_path = os.path.join(test_dir, "box_with_line.glb")
-
-    # Read original file
-    with open(box_with_line_path, "rb") as f:
-        original_data = f.read()
-
-    # Attempt compression (should return original)
-    result = gdt.compress_gltf(box_with_line_path)
-
-    # Verify returned data is identical to original
-    result_data = result.getvalue()
-    assert (
-        result_data == original_data
-    ), "Unsupported primitives should return original data unchanged"
-
-
-def test_roundtrip_box():
-    """Test compress -> decompress roundtrip glb."""
-    test_dir = os.path.dirname(__file__)
-    glb_path = os.path.join(test_dir, "partial_cylinder.glb")
+    original_size = len(original_data)
 
     # Compress
     compressed = gdt.compress_gltf(glb_path)
@@ -81,8 +46,38 @@ def test_roundtrip_box():
         b"glTF"
     ), "Decompressed data should be valid glB"
 
-    # Verify it's larger than compressed (normal Draco behavior)
+    # Verify size is within xx% of original
+    decompressed_size = len(decompressed_data)
+    size_diff = abs(decompressed_size - original_size) / original_size
+    assert (
+        size_diff <= 2.0
+    ), f"Roundtrip size difference too large: {size_diff:.2%} (original: {original_size}, decompressed: {decompressed_size})"
+
+
+@pytest.mark.parametrize("filename,min_reduction", [("partial_cylinder.glb", 0.50)])
+def test_compression(filename, min_reduction):
+    """Test compression achieves minimum size reduction."""
+    glb_path = Path(__file__).with_name(filename)
+
+    # Read original file
+    with open(glb_path, "rb") as f:
+        original_data = f.read()
+
+    original_size = len(original_data)
+
+    # Compress
+    compressed = gdt.compress_gltf(glb_path)
+
+    # Verify compression occurred
     compressed_data = compressed.getvalue()
-    assert len(decompressed_data) > len(
-        compressed_data
-    ), "Decompressed should be larger than compressed"
+    compressed_size = len(compressed_data)
+    assert compressed_size < original_size, "Compression should reduce file size"
+
+    # Verify it's still a valid glB
+    assert compressed_data.startswith(b"glTF"), "Output should be valid glB"
+
+    # Verify compression ratio meets minimum requirement
+    compression_ratio = (original_size - compressed_size) / original_size
+    assert (
+        compression_ratio >= min_reduction
+    ), f"Compression ratio {compression_ratio:.2%} is below minimum {min_reduction:.2%} (original: {original_size}, compressed: {compressed_size})"

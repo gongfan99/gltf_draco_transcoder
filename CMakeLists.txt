@@ -6,30 +6,35 @@ project(gltf_draco_transcoder VERSION 0.1.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-if(NOT DEFINED DRACO_SDK_PATH AND DEFINED ENV{DRACO_SDK_PATH})
-  set(DRACO_SDK_PATH "$ENV{DRACO_SDK_PATH}")
-endif()
+# Try to find Draco via vcpkg or system packages first
+find_package(draco CONFIG QUIET)
 
-if(DEFINED DRACO_SDK_PATH AND EXISTS "${DRACO_SDK_PATH}")
-  message(STATUS "Using Draco SDK from: ${DRACO_SDK_PATH}")
-
-  set(draco_DIR "${DRACO_SDK_PATH}/share/cmake/draco")
-  find_package(draco REQUIRED)
-
-  add_library(draco_transcoder_shared SHARED
-      cpp/draco_transcoder_lib.cc
-      cpp/draco_transcoder_c_api.cc
-  )
-
-  target_link_libraries(draco_transcoder_shared PRIVATE draco::draco)
-
-  add_executable(draco cpp/draco_selective_prototype.cc)
-
-  target_link_libraries(draco PRIVATE draco::draco)
-
+if(draco_FOUND)
+  message(STATUS "Using Draco from vcpkg or system: ${draco_DIR}")
 else()
-  message(FATAL_ERROR "DRACO_SDK_PATH is not defined or the path does not exist. Please provide a valid Draco SDK path.")
+  # Fallback to SDK path if not found
+  if(NOT DEFINED DRACO_SDK_PATH AND DEFINED ENV{DRACO_SDK_PATH})
+    set(DRACO_SDK_PATH "$ENV{DRACO_SDK_PATH}")
+  endif()
+
+  if(DEFINED DRACO_SDK_PATH AND EXISTS "${DRACO_SDK_PATH}")
+    message(STATUS "Using Draco SDK from: ${DRACO_SDK_PATH}")
+    set(draco_DIR "${DRACO_SDK_PATH}/share/cmake/draco")
+    find_package(draco REQUIRED)
+  else()
+    message(FATAL_ERROR "Draco not found via vcpkg or system, and DRACO_SDK_PATH is not defined or does not exist. Please provide a valid Draco SDK path or ensure vcpkg is configured correctly.")
+  endif()
 endif()
+
+add_library(draco_transcoder_shared SHARED
+    cpp/selective_draco_transcoder.cc
+)
+
+target_link_libraries(draco_transcoder_shared PRIVATE draco::draco)
+
+# add_executable(draco cpp/draco_selective_prototype.cc)
+
+# target_link_libraries(draco PRIVATE draco::draco)
 
 target_include_directories(draco_transcoder_shared PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/cpp

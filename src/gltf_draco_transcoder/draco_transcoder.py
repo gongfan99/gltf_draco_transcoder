@@ -61,9 +61,6 @@ def _load_library() -> ctypes.CDLL:
 _lib = _load_library()
 
 # Configure function signatures
-_lib.draco_transcode_gltf.argtypes = [c_char_p, c_char_p, ctypes.POINTER(DracoOptions)]
-_lib.draco_transcode_gltf.restype = c_int
-
 _lib.draco_transcode_gltf_from_buffer.argtypes = [
     ctypes.c_void_p,
     ctypes.c_size_t,
@@ -83,88 +80,8 @@ _lib.draco_free_buffer.argtypes = [ctypes.c_void_p]
 _lib.draco_free_buffer.restype = None
 
 
-def _has_unsupported_primitives(data: bytes) -> bool:
-    """
-    Check if the glB data contains any primitives with modes other than 0 (POINTS) or 4 (TRIANGLES).
-
-    Args:
-        data (bytes): The glB binary data
-
-    Returns:
-        bool: True if unsupported primitives are found
-    """
-    if len(data) < 12:
-        return True  # Too short to be valid glB
-
-    # Check magic
-    magic = data[:4]
-    if magic != b"glTF":
-        return True  # Not a glB file
-
-    try:
-        # Parse glB header
-        version = struct.unpack("<I", data[4:8])[0]
-        total_length = struct.unpack("<I", data[8:12])[0]
-
-        if version != 2:
-            return True  # Not glTF 2.0
-
-        # Skip header, read first chunk (JSON)
-        offset = 12
-        while offset + 8 <= len(data):
-            chunk_length = struct.unpack("<I", data[offset + 4 : offset + 8])[0]
-
-            # Try to decode as JSON regardless of chunk type (some glB files don't use 'JSON' exactly)
-            try:
-                json_data = data[
-                    offset + 8 : offset + 8 + min(chunk_length, 50000)
-                ]  # Reasonable limit
-                json_str = json_data.decode("utf-8", errors="ignore")
-                # Look for the meshes array
-                if '"meshes"' in json_str:
-                    # Find the start of JSON
-                    json_start = json_str.find("{")
-                    if json_start >= 0:
-                        json_content = json_str[json_start:]
-                        # Try to find a reasonable end
-                        brace_count = 0
-                        end_pos = 0
-                        for i, char in enumerate(json_content):
-                            if char == "{":
-                                brace_count += 1
-                            elif char == "}":
-                                brace_count -= 1
-                                if brace_count == 0:
-                                    end_pos = i + 1
-                                    break
-                        if end_pos > 0:
-                            try:
-                                gltf_json = json.loads(json_content[:end_pos])
-
-                                # Check all meshes and primitives
-                                for mesh in gltf_json.get("meshes", []):
-                                    for primitive in mesh.get("primitives", []):
-                                        mode = primitive.get(
-                                            "mode", 4
-                                        )  # Default is 4 (TRIANGLES)
-                                        if mode not in [0, 4]:  # 0=POINTS, 4=TRIANGLES
-                                            return True
-                                return False  # No unsupported primitives found
-                            except json.JSONDecodeError:
-                                pass  # Continue to next chunk
-            except UnicodeDecodeError:
-                pass  # Continue to next chunk
-
-            offset += 8 + chunk_length
-
-        return True  # No valid JSON chunk found
-
-    except (struct.error, json.JSONDecodeError, UnicodeDecodeError):
-        return True  # Invalid glB or JSON - treat as unsupported
-
-
 def compress_gltf(
-    input_data: str | io.BytesIO,
+    input_data: str | Path | io.BytesIO,
     qp: int = 11,
     qt: int = 10,
     qn: int = 8,
@@ -195,8 +112,8 @@ def compress_gltf(
         RuntimeError: If input data is invalid or compression fails
     """
     # Handle input data
-    if isinstance(input_data, str):
-        if not os.path.exists(input_data):
+    if isinstance(input_data, str) or isinstance(input_data, Path):
+        if not Path(input_data).exists():
             raise RuntimeError(f"Input file does not exist: {input_data}")
         # Read file into BytesIO
         with open(input_data, "rb") as f:
@@ -221,15 +138,6 @@ def compress_gltf(
     input_bytes = input_buffer.getvalue()
     input_size = len(input_bytes)
 
-    # Check for unsupported primitives (skip compression if found)
-    if _has_unsupported_primitives(input_bytes):
-        print(
-            "Warning: Input contains unsupported primitive types (only TRIANGLES and POINTS are supported). Returning original data unchanged."
-        )
-        # Return a copy of the input data
-        input_buffer.seek(0)
-        return io.BytesIO(input_buffer.read())
-
     # Call the C function
     output_size = ctypes.c_size_t()
     result = _lib.draco_transcode_gltf_from_buffer(
@@ -248,7 +156,7 @@ def compress_gltf(
         _lib.draco_free_buffer(result)
 
 
-def decompress_gltf(input_data: str | io.BytesIO) -> io.BytesIO:
+def decompress_gltf(input_data: str | Path | io.BytesIO) -> io.BytesIO:
     """
     Decompress Draco-compressed glTF data to uncompressed glTF.
 
@@ -262,8 +170,8 @@ def decompress_gltf(input_data: str | io.BytesIO) -> io.BytesIO:
         RuntimeError: If input data is invalid or decompression fails
     """
     # Handle input data
-    if isinstance(input_data, str):
-        if not os.path.exists(input_data):
+    if isinstance(input_data, str) or isinstance(input_data, Path):
+        if not Path(input_data).exists():
             raise RuntimeError(f"Input file does not exist: {input_data}")
         # Read file into BytesIO
         with open(input_data, "rb") as f:

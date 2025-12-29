@@ -1,0 +1,8 @@
+{
+  "name": "gltf-draco-transcoder",
+  "version": "0.1.0",
+  "dependencies": [
+    "draco",
+    "tinygltf"
+  ]
+}
