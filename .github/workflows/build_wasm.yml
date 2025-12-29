@@ -40,7 +40,6 @@ jobs:
           ./emsdk activate ${{ env.EM_VERSION }}
 
       - name: Setup EMSDK env
-        if: steps.cache-emsdk.outputs.cache-hit != 'true'
         run: |
           source ./emsdk_env.sh
           echo "PATH=$PATH" >> $GITHUB_ENV
