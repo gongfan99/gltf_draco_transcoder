@@ -12,7 +12,8 @@ env:
   EM_VERSION: 4.0.22
   EM_CACHE_FOLDER: "emsdk-cache"
   VCPKG_VERSION: master
-  VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/gongfan99/index.json,readwrite"
+  VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+  VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/vcpkg_cache,readwrite"
 
 jobs:
   build:
@@ -28,22 +29,18 @@ jobs:
           version: ${{ env.EM_VERSION }}
           actions-cache-folder: ${{ env.EM_CACHE_FOLDER }}
 
-      - name: Install Dependencies (Linux)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y mono-complete libx11-dev libxcursor-dev libxinerama-dev libxrandr-dev libxi-dev
-
-      - name: Export GitHub Actions cache environment variables
-        uses: actions/github-script@v7
+      - name: Cache vcpkg binaries
+        uses: actions/cache@v4
         with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+          path: ${{ github.workspace }}/vcpkg_cache
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-
 
-      - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
+      - name: Bootstrap vcpkg
+        run: ./vcpkg/bootstrap-vcpkg.sh
 
-      - name: Configure CMake
+      - name: Configure CMake and Build
         run: |
           cmake -B build \
             -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
@@ -52,9 +49,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
             -DVCPKG_TARGET_TRIPLET=wasm32-emscripten-lto
-
-      - name: Build
-        run: cmake --build build --config Release
+          cmake --build build --config Release
 
       - name: Upload WASM artifacts
         uses: actions/upload-artifact@v4
