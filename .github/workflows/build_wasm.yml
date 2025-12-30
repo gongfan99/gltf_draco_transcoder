@@ -53,10 +53,8 @@ jobs:
       - name: Configure CMake and Build
         run: |
           source emsdk/emsdk_env.sh
-          echo $EMSCRIPTEN_ROOT
-          export EMSCRIPTEN_ROOT=$EMSDK/upstream/emscripten
-          export VCPKG_ENV_PASSTHROUGH="EMSDK;EMSCRIPTEN_ROOT"
-          echo $EMSCRIPTEN_ROOT
+          export EMSCRIPTEN=$EMSDK/upstream/emscripten
+          export VCPKG_ENV_PASSTHROUGH="EMSDK;EMSCRIPTEN"
           cmake -B build \
             -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
             -DVCPKG_OVERLAY_TRIPLETS=${{ github.workspace }}/vcpkg-triplets \
