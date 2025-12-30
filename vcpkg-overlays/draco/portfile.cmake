@@ -42,10 +42,6 @@ vcpkg_cmake_configure(
 
 vcpkg_cmake_install()
 
-if(NOT VCPKG_TARGET_IS_EMSCRIPTEN)
-    vcpkg_copy_tools(TOOL_NAMES draco_encoder draco_decoder AUTO_CLEAN)
-endif()
-
 file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include" "${CURRENT_PACKAGES_DIR}/debug/share")
 
 vcpkg_copy_pdbs()
