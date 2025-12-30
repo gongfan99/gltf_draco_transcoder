@@ -42,7 +42,8 @@ jobs:
             echo "VCPKG_ROOT will be set inside the container"
           else
             if [[ -n "$VCPKG_INSTALLATION_ROOT" ]]; then
-              echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
+              VCPKG_ROOT_FS=$(echo "$VCPKG_INSTALLATION_ROOT" | sed 's/\\/\//g')
+              echo "VCPKG_ROOT=$VCPKG_ROOT_FS" >> $GITHUB_ENV
             else
               git clone https://github.com/microsoft/vcpkg.git ~/vcpkg
               cd ~/vcpkg
