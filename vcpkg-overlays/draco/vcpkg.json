@@ -4,6 +4,8 @@
   "description": "Custom Draco build for Transcoder",
   "dependencies": [
     "eigen3",
+    "ghc-filesystem",
+    "tinygltf",
     {
       "name": "vcpkg-cmake",
       "host": true

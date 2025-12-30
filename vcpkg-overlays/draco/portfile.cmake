@@ -15,6 +15,8 @@ vcpkg_cmake_configure(
         -DDRACO_TRANSCODER_SUPPORTED=ON
         -DDRACO_BUILD_EXECUTABLES=OFF
         -DDRACO_EIGEN_PATH=${CURRENT_INSTALLED_DIR}/include/eigen3
+        -DDRACO_FILESYSTEM_PATH=${CURRENT_INSTALLED_DIR}/include
+        -DDRACO_TINYGLTF_PATH=${CURRENT_INSTALLED_DIR}/include
 )
 
 vcpkg_cmake_install()
