@@ -2,6 +2,8 @@ vcpkg_from_git(
     OUT_SOURCE_PATH SOURCE_PATH
     URL https://github.com/google/draco.git
     REF 3abbc66fdf5597b1560c44ce7840aac76900b3f7
+    PATCHES
+        enable-dedup.patch
 )
 
 if(VCPKG_TARGET_IS_EMSCRIPTEN)
