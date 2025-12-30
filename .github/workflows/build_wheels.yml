@@ -85,6 +85,7 @@ jobs:
             CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}"
           CIBW_ENVIRONMENT_LINUX: >-
             VCPKG_BINARY_SOURCES="clear;files,/project/vcpkg_cache,readwrite"
+            CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}"
 
       - uses: actions/upload-artifact@v4
         with:
