@@ -4,6 +4,7 @@ vcpkg_from_git(
     REF 3abbc66fdf5597b1560c44ce7840aac76900b3f7
     PATCHES
         enable-dedup.patch
+        fix-invalid-casting.patch
 )
 
 if(VCPKG_TARGET_IS_EMSCRIPTEN)
@@ -17,7 +18,6 @@ vcpkg_cmake_configure(
         -DPYTHON_EXECUTABLE=:
         -DDRACO_JS_GLUE=OFF
         -DDRACO_TRANSCODER_SUPPORTED=ON
-        -DDRACO_ATTRIBUTE_VALUES_DEDUPLICATION_SUPPORTED=ON
         -DDRACO_BUILD_EXECUTABLES=OFF
         -DDRACO_EIGEN_PATH=${CURRENT_INSTALLED_DIR}/include/eigen3
         -DDRACO_FILESYSTEM_PATH=${CURRENT_INSTALLED_DIR}/include
