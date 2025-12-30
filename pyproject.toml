@@ -1,5 +1,5 @@
 [build-system]
-requires = ["scikit-build-core", "setuptools-scm"]
+requires = ["scikit-build-core>=0.10", "setuptools-scm"]
 build-backend = "scikit_build_core.build"
 
 [project]
@@ -32,7 +32,10 @@ cmake.version = ">=3.15"
 cmake.source-dir = "."
 cmake.args = [
     "-DCMAKE_BUILD_TYPE=Release",
-    "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
+    "-DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+    "-DVCPKG_OVERLAY_TRIPLETS=./vcpkg-triplets",
+    "-DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}",
+    "-DCMAKE_OSX_DEPLOYMENT_TARGET=11.0"
 ]
 build.targets = ["install"]
 wheel.install-dir = "gltf_draco_transcoder"
@@ -41,23 +44,13 @@ wheel.py-api = "py3"
 [tool.cibuildwheel]
 build = ["cp311-*"]
 skip = ["*-win32", "*-manylinux_i686", "*-musllinux_i686"]
-
-[tool.cibuildwheel.environment]
-VCPKG_ROOT = "$VCPKG_ROOT"
-VCPKG_OVERLAY_TRIPLETS = "$VCPKG_OVERLAY_TRIPLETS"
-VCPKG_TARGET_TRIPLET = "$VCPKG_TARGET_TRIPLET"
+environment-pass = ["VCPKG_TARGET_TRIPLET"]
 
 [tool.cibuildwheel.linux]
 manylinux-x86_64-image = "manylinux_2_28"
 manylinux-aarch64-image = "manylinux_2_28"
 before-all = "scripts/install_vcpkg_linux.sh"
-environment = { 
-    VCPKG_ROOT = "/opt/vcpkg"
-}
-
-[tool.scikit-build.cmake.define]
-CMAKE_TOOLCHAIN_FILE = "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-CMAKE_OSX_DEPLOYMENT_TARGET = "11.0"
+environment = { VCPKG_ROOT="/opt/vcpkg" }
 
 [tool.setuptools-scm]
 version_scheme = "guess-next-dev"
