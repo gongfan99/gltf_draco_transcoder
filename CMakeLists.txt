@@ -27,34 +27,63 @@ else()
 endif()
 
 if (EMSCRIPTEN)
-  add_library(draco_transcoder_shared STATIC
+  add_executable(${PROJECT_NAME}
       cpp/selective_draco_transcoder.cc
+      wasm/binding.cc
   )
 else()
-  add_library(draco_transcoder_shared SHARED
+  add_library(${PROJECT_NAME} SHARED
       cpp/selective_draco_transcoder.cc
   )
 endif()
 
-target_link_libraries(draco_transcoder_shared PRIVATE draco::draco)
+target_link_libraries(${PROJECT_NAME} PRIVATE draco::draco)
 
 # add_executable(draco cpp/draco_selective_prototype.cc)
 
 # target_link_libraries(draco PRIVATE draco::draco)
 
-target_include_directories(draco_transcoder_shared PUBLIC
+target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/cpp
 )
 
-set_target_properties(draco_transcoder_shared PROPERTIES
-    VERSION ${PROJECT_VERSION}
-    SOVERSION ${PROJECT_VERSION_MAJOR}
-    POSITION_INDEPENDENT_CODE ON
-)
+if (EMSCRIPTEN)
+    target_compile_options (${TARGET} PRIVATE
+        $<IF:$<CONFIG:Release>,-sDISABLE_EXCEPTION_CATCHING=1,-sDISABLE_EXCEPTION_CATCHING=0>
+    )
+    target_link_options (${TARGET} PRIVATE
+        $<IF:$<CONFIG:Release>,-sDISABLE_EXCEPTION_CATCHING=1,-sDISABLE_EXCEPTION_CATCHING=0>
+        # -g
+        # -fsanitize=address
+        # -sASSERTIONS=2
+        -sMODULARIZE=1
+        -sEXPORT_ES6=1
+        -sSTACK_SIZE=2mb
+        -sINITIAL_MEMORY=32mb
+        -sALLOW_MEMORY_GROWTH=1
+        -sMAXIMUM_MEMORY=500mb
+        -sENVIRONMENT=web,node
+        --bind
+        --emit-tsd "${TARGET}.d.ts"
+    )
+else()
+  set_target_properties(${PROJECT_NAME} PROPERTIES
+      VERSION ${PROJECT_VERSION}
+      SOVERSION ${PROJECT_VERSION_MAJOR}
+      POSITION_INDEPENDENT_CODE ON
+  )
+endif()
 
-# Install the library into the package directory (handled by scikit-build-core)
-install(TARGETS draco_transcoder_shared
-    LIBRARY DESTINATION .
-    RUNTIME DESTINATION .
-    ARCHIVE DESTINATION .
-)
+
+if (EMSCRIPTEN)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.js DESTINATION .)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.wasm DESTINATION .)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.d.ts DESTINATION .)
+else()
+  # Install the library into the package directory (handled by scikit-build-core)
+  install(TARGETS ${PROJECT_NAME}
+      LIBRARY DESTINATION .
+      RUNTIME DESTINATION .
+      ARCHIVE DESTINATION .
+  )
+endif ()
