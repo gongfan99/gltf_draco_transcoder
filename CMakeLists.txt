@@ -27,17 +27,19 @@ else()
 endif()
 
 if (EMSCRIPTEN)
+  find_package(TinyGLTF CONFIG REQUIRED)
   add_executable(${PROJECT_NAME}
       cpp/selective_draco_transcoder.cc
       wasm/binding.cc
   )
+  target_link_libraries(${PROJECT_NAME} PRIVATE tinygltf::tinygltf draco::draco)
 else()
   add_library(${PROJECT_NAME} SHARED
       cpp/selective_draco_transcoder.cc
   )
+  target_link_libraries(${PROJECT_NAME} PRIVATE draco::draco)
 endif()
 
-target_link_libraries(${PROJECT_NAME} PRIVATE draco::draco)
 
 # add_executable(draco cpp/draco_selective_prototype.cc)
 
@@ -48,10 +50,10 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 
 if (EMSCRIPTEN)
-    target_compile_options (${TARGET} PRIVATE
+    target_compile_options (${PROJECT_NAME} PRIVATE
         $<IF:$<CONFIG:Release>,-sDISABLE_EXCEPTION_CATCHING=1,-sDISABLE_EXCEPTION_CATCHING=0>
     )
-    target_link_options (${TARGET} PRIVATE
+    target_link_options (${PROJECT_NAME} PRIVATE
         $<IF:$<CONFIG:Release>,-sDISABLE_EXCEPTION_CATCHING=1,-sDISABLE_EXCEPTION_CATCHING=0>
         # -g
         # -fsanitize=address
