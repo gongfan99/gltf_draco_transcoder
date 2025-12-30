@@ -85,6 +85,8 @@ jobs:
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_ARCHS_MACOS: arm64
+          CIBW_ENVIRONMENT: >
+            CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}"
           CIBW_ENVIRONMENT_LINUX: >-
             VCPKG_BINARY_SOURCES="clear;files,/project/vcpkg_cache,readwrite" 
             VCPKG_OVERLAY_TRIPLETS="/project/vcpkg-triplets"
