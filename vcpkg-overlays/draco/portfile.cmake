@@ -11,6 +11,12 @@ if(VCPKG_TARGET_IS_EMSCRIPTEN)
     set(ENV{EMSCRIPTEN} "${EMSCRIPTEN_ROOT}")
 endif()
 
+vcpkg_replace_string(
+    "${SOURCE_PATH}/src/draco/scene/trs_matrix.h"
+    "StatusOr<const Eigen::Matrix"
+    "StatusOr<Eigen::Matrix"
+)
+
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
     OPTIONS
