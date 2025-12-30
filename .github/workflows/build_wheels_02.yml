@@ -1,0 +1,243 @@
+name: Build and Release Wheels
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+env:
+  DRACO_VERSION: main
+  DRACO_SDK_REL_PATH: draco_sdk
+
+jobs:
+  build-draco-sdk:
+    name: build-draco-sdk-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            container: quay.io/pypa/manylinux_2_28_x86_64
+            cmake_generator: "Unix Makefiles"
+            cmake_build_args: "--parallel 2"
+            cmake_install_args: ""
+          - os: ubuntu-24.04-arm
+            container: quay.io/pypa/manylinux_2_28_aarch64
+            cmake_generator: "Unix Makefiles"
+            cmake_build_args: "--parallel 4"
+            cmake_install_args: ""
+          - os: windows-latest
+            cmake_generator: "Visual Studio 17 2022"
+            cmake_build_args: "--config Release"
+            cmake_install_args: "--config Release"
+          - os: macos-latest
+            cmake_generator: "Unix Makefiles"
+            cmake_build_args: "--parallel 2"
+            cmake_install_args: ""
+    steps:
+      - name: Cache Draco SDK
+        id: cache-sdk
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.DRACO_SDK_REL_PATH }}
+          key: draco-sdk-${{ matrix.os }}-${{ env.DRACO_VERSION }}
+          restore-keys: |
+            draco-sdk-${{ matrix.os }}-${{ env.DRACO_VERSION }}
+
+      - name: Clone Draco with Submodules
+        if: steps.cache-sdk.outputs.cache-hit != 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: google/draco
+          path: draco_src
+          ref: ${{ env.DRACO_VERSION }}
+          submodules: true
+
+      - name: Checkout scripts only
+        if: steps.cache-sdk.outputs.cache-hit != 'true'
+        uses: actions/checkout@v4
+        with:
+          path: my_project_scripts
+          sparse-checkout: scripts
+          sparse-checkout-cone-mode: false
+
+      - name: Build Draco SDK
+        if: steps.cache-sdk.outputs.cache-hit != 'true'
+        shell: bash
+        env:
+          CMAKE_GENERATOR: ${{ matrix.cmake_generator }}
+          CMAKE_BUILD_ARGS: ${{ matrix.cmake_build_args }}
+          CMAKE_INSTALL_ARGS: ${{ matrix.cmake_install_args }}
+          DRACO_SDK_REL_PATH: ${{ env.DRACO_SDK_REL_PATH }}
+        run: |
+          if [ -n "${{ matrix.container }}" ]; then
+            docker run --rm -e CMAKE_GENERATOR -e CMAKE_BUILD_ARGS -e CMAKE_INSTALL_ARGS -e DRACO_SDK_REL_PATH -v $GITHUB_WORKSPACE:/workspace -w /workspace ${{ matrix.container }} bash my_project_scripts/scripts/build_draco_sdk.sh
+          else
+            bash my_project_scripts/scripts/build_draco_sdk.sh
+          fi
+
+      - name: Upload SDK as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: draco-sdk-${{ matrix.os }}
+          path: ${{ env.DRACO_SDK_REL_PATH }}
+          retention-days: 1
+
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    needs: [build-draco-sdk]
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+          - os: ubuntu-24.04-arm
+          - os: windows-latest
+          - os: macos-latest
+    steps:
+      - name: Cache wheels
+        id: cache-wheels
+        uses: actions/cache@v4
+        with:
+          path: ./wheelhouse
+          key: cibw-wheels-${{ matrix.os }}-1
+
+      - name: Checkout Source Code
+        if: steps.cache-wheels.outputs.cache-hit != 'true'
+        uses: actions/checkout@v4
+
+      - name: Download Draco SDK
+        if: steps.cache-wheels.outputs.cache-hit != 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: draco-sdk-${{ matrix.os }}
+          path: ${{ env.DRACO_SDK_REL_PATH }}
+
+      - name: Set up Python
+        if: steps.cache-wheels.outputs.cache-hit != 'true'
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        if: steps.cache-wheels.outputs.cache-hit != 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install cibuildwheel
+
+      - name: Build wheels
+        if: steps.cache-wheels.outputs.cache-hit != 'true'
+        run: python -m cibuildwheel --output-dir wheelhouse
+        env:
+          DRACO_SDK_PATH: ${{ github.workspace }}/${{ env.DRACO_SDK_REL_PATH }}
+          CIBW_ARCHS_MACOS: arm64
+          CIBW_ENVIRONMENT_LINUX: DRACO_SDK_PATH=/project/${{ env.DRACO_SDK_REL_PATH }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-${{ matrix.os }}
+          path: ./wheelhouse/*.whl
+
+  test_wheels:
+    name: Test wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    needs: [build_wheels]
+    strategy:
+      matrix:
+        include:
+          # - os: ubuntu-latest
+          # - os: ubuntu-24.04-arm
+          - os: windows-latest
+          # - os: macos-latest
+          # - os: ubuntu-latest
+          #   container: python:3.11-alpine
+          # - os: ubuntu-24.04-arm
+          #   container: python:3.11-alpine
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: cibw-wheels-${{ matrix.os }}
+          path: dist/
+
+      - name: Set up Python
+        if: matrix.container == '' || !contains(matrix.container, 'python')
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install wheel and test
+        shell: bash
+        run: |
+          if [[ -n "${{ matrix.container }}" && "${{ matrix.container }}" == *"alpine"* ]]; then
+            docker run --rm -v $GITHUB_WORKSPACE:/workspace -w /workspace ${{ matrix.container }} sh -c "
+              apk add --no-cache libstdc++
+              sh scripts/test_wheels.sh
+            "
+          else
+            bash scripts/test_wheels.sh
+          fi
+
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    needs: [test_wheels]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build
+
+      - name: Build sdist
+        run: python -m build --sdist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-sdist
+          path: dist/*.tar.gz
+
+  publish:
+    needs: [build_sdist]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    environment: release
+    permissions:
+      id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: cibw-wheels-ubuntu-latest
+          path: dist/
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: cibw-wheels-ubuntu-24.04-arm
+          path: dist/
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: cibw-wheels-windows-latest
+          path: dist/
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: cibw-wheels-macos-latest
+          path: dist/
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: cibw-sdist
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
