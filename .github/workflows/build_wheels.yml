@@ -33,7 +33,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/vcpkg_cache
-          key: vcpkg-python-${{ matrix.os }}-${{ hashFiles('vcpkg.json') }}
+          key: vcpkg-${{ matrix.triplet }}-${{ hashFiles('vcpkg.json') }}
 
       - name: Install and set VCPKG_ROOT
         shell: bash

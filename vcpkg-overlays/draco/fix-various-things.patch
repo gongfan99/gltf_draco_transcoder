@@ -1,0 +1,52 @@
+diff --git a/cmake/draco_options.cmake b/cmake/draco_options.cmake
+index fa460c6..79af7f2 100644
+--- a/cmake/draco_options.cmake
++++ b/cmake/draco_options.cmake
+@@ -219,7 +219,7 @@ macro(draco_set_optional_features)
+     endif()
+ 
+ 
+-    if(NOT EMSCRIPTEN)
++    if(TRUE) # if(NOT EMSCRIPTEN)
+       # For now, enable deduplication for both encoder and decoder.
+       # TODO(ostava): Support for disabling attribute deduplication for the C++
+       # decoder is planned in future releases.
+diff --git a/src/draco/core/status_or.h b/src/draco/core/status_or.h
+index 156b9bc..af40715 100644
+--- a/src/draco/core/status_or.h
++++ b/src/draco/core/status_or.h
+@@ -34,7 +34,7 @@ class StatusOr {
+   // Status or the return value directly from functions.
+   StatusOr(const StatusOr &) = default;
+   StatusOr(StatusOr &&) = default;
+-  StatusOr(const Status &status) : status_(status) {}
++  StatusOr(const Status &status) : status_(status), value_() {}
+   StatusOr(const T &value) : status_(OkStatus()), value_(value) {}
+   StatusOr(T &&value) : status_(OkStatus()), value_(std::move(value)) {}
+   StatusOr(const Status &status, const T &value)
+diff --git a/src/draco/io/gltf_decoder.cc b/src/draco/io/gltf_decoder.cc
+index 2ea71ec..df4d22d 100644
+--- a/src/draco/io/gltf_decoder.cc
++++ b/src/draco/io/gltf_decoder.cc
+@@ -497,7 +497,7 @@ Status GltfDecoder::LoadFile(const std::string &file_name,
+       // TinyGLTF's ExpandFilePath does not do filesystem i/o, so it's safe to
+       // use in all environments.
+       &tinygltf::ExpandFilePath, &ReadWholeFile, &WriteWholeFile,
+-      reinterpret_cast<void *>(input_files)};
++      [](size_t*, std::string*, const std::string&, void*){ return true; }};
+ 
+   loader.SetFsCallbacks(fs_callbacks);
+ 
+diff --git a/src/draco/scene/trs_matrix.h b/src/draco/scene/trs_matrix.h
+index 837d835..6216222 100644
+--- a/src/draco/scene/trs_matrix.h
++++ b/src/draco/scene/trs_matrix.h
+@@ -45,7 +45,7 @@ class TrsMatrix {
+     return *this;
+   }
+   bool MatrixSet() const { return matrix_set_; }
+-  StatusOr<const Eigen::Matrix4d> Matrix() const {
++  StatusOr<Eigen::Matrix4d> Matrix() const {
+     if (!matrix_set_) {
+       return Status(Status::DRACO_ERROR, "Matrix is not set.");
+     }
