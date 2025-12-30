@@ -54,12 +54,7 @@ jobs:
       - name: Configure vcpkg env
         shell: bash
         run: |
-          echo "VCPKG_OVERLAY_TRIPLETS=$GITHUB_WORKSPACE/vcpkg-triplets" >> $GITHUB_ENV
           echo "VCPKG_TARGET_TRIPLET=${{ matrix.triplet }}" >> $GITHUB_ENV
-
-      # - name: Debug vcpkg
-      #   run: |
-      #     vcpkg env --debug
 
       - name: Cache wheels
         id: cache-wheels
