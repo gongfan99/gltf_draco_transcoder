@@ -2,8 +2,8 @@ name: Build WASM
 
 on:
   push:
-    branches:
-      - "**" # Trigger on push to any branch
+    # branches:
+    #   - "**" # Trigger on push to any branch
     tags:
       - "v*"
   workflow_dispatch:
@@ -43,9 +43,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/vcpkg_cache
-          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
-          restore-keys: |
-            vcpkg-${{ runner.os }}-
+          key: vcpkg-wasm-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
 
       - name: Export VCPKG_ROOT
         run: echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV

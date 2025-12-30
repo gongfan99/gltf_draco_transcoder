@@ -26,13 +26,13 @@ else()
   endif()
 endif()
 
+find_path(TINYGLTF_INCLUDE_DIRS "tiny_gltf.h")
+
 if (EMSCRIPTEN)
-  find_path(TINYGLTF_INCLUDE_DIRS "tiny_gltf.h")
   add_executable(${PROJECT_NAME}
       cpp/selective_draco_transcoder.cc
       wasm/binding.cc
   )
-  target_include_directories(${PROJECT_NAME} PRIVATE ${TINYGLTF_INCLUDE_DIRS})
 else()
   add_library(${PROJECT_NAME} SHARED
       cpp/selective_draco_transcoder.cc
@@ -45,8 +45,11 @@ target_link_libraries(${PROJECT_NAME} PRIVATE draco::draco)
 
 # target_link_libraries(draco PRIVATE draco::draco)
 
-target_include_directories(${PROJECT_NAME} PUBLIC
+target_include_directories(${PROJECT_NAME} 
+  PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/cpp
+  PRIVATE 
+    ${TINYGLTF_INCLUDE_DIRS}
 )
 
 if (EMSCRIPTEN)

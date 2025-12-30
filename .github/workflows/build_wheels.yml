@@ -2,117 +2,71 @@ name: Build and Release Wheels
 
 on:
   push:
+    branches:
+      - "**" # Trigger on push to any branch
     tags:
       - "v*"
   workflow_dispatch:
 
 env:
-  DRACO_VERSION: main
-  DRACO_SDK_REL_PATH: draco_sdk
+  VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/vcpkg_cache,readwrite"
 
 jobs:
-  build-draco-sdk:
-    name: build-draco-sdk-${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            container: quay.io/pypa/manylinux_2_28_x86_64
-            cmake_generator: "Unix Makefiles"
-            cmake_build_args: "--parallel 2"
-            cmake_install_args: ""
-          - os: ubuntu-24.04-arm
-            container: quay.io/pypa/manylinux_2_28_aarch64
-            cmake_generator: "Unix Makefiles"
-            cmake_build_args: "--parallel 4"
-            cmake_install_args: ""
-          - os: windows-latest
-            cmake_generator: "Visual Studio 17 2022"
-            cmake_build_args: "--config Release"
-            cmake_install_args: "--config Release"
-          - os: macos-latest
-            cmake_generator: "Unix Makefiles"
-            cmake_build_args: "--parallel 2"
-            cmake_install_args: ""
-    steps:
-      - name: Cache Draco SDK
-        id: cache-sdk
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.DRACO_SDK_REL_PATH }}
-          key: draco-sdk-${{ matrix.os }}-${{ env.DRACO_VERSION }}
-          restore-keys: |
-            draco-sdk-${{ matrix.os }}-${{ env.DRACO_VERSION }}
-
-      - name: Clone Draco with Submodules
-        if: steps.cache-sdk.outputs.cache-hit != 'true'
-        uses: actions/checkout@v4
-        with:
-          repository: google/draco
-          path: draco_src
-          ref: ${{ env.DRACO_VERSION }}
-          submodules: true
-
-      - name: Checkout scripts only
-        if: steps.cache-sdk.outputs.cache-hit != 'true'
-        uses: actions/checkout@v4
-        with:
-          path: my_project_scripts
-          sparse-checkout: scripts
-          sparse-checkout-cone-mode: false
-
-      - name: Build Draco SDK
-        if: steps.cache-sdk.outputs.cache-hit != 'true'
-        shell: bash
-        env:
-          CMAKE_GENERATOR: ${{ matrix.cmake_generator }}
-          CMAKE_BUILD_ARGS: ${{ matrix.cmake_build_args }}
-          CMAKE_INSTALL_ARGS: ${{ matrix.cmake_install_args }}
-          DRACO_SDK_REL_PATH: ${{ env.DRACO_SDK_REL_PATH }}
-        run: |
-          if [ -n "${{ matrix.container }}" ]; then
-            docker run --rm -e CMAKE_GENERATOR -e CMAKE_BUILD_ARGS -e CMAKE_INSTALL_ARGS -e DRACO_SDK_REL_PATH -v $GITHUB_WORKSPACE:/workspace -w /workspace ${{ matrix.container }} bash my_project_scripts/scripts/build_draco_sdk.sh
-          else
-            bash my_project_scripts/scripts/build_draco_sdk.sh
-          fi
-
-      - name: Upload SDK as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: draco-sdk-${{ matrix.os }}
-          path: ${{ env.DRACO_SDK_REL_PATH }}
-          retention-days: 1
-
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    needs: [build-draco-sdk]
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
-          - os: ubuntu-24.04-arm
-          - os: windows-latest
+          # - os: ubuntu-latest
+          #   triplet: x64-linux-python
+          # - os: ubuntu-24.04-arm
+          #   triplet: arm64-linux-python
+          # - os: windows-latest
+          #   triplet: x64-windows-python
           - os: macos-latest
+            triplet: arm64-osx-python
     steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache vcpkg binaries
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/vcpkg_cache
+          key: vcpkg-python-${{ matrix.os }}-${{ hashFiles('vcpkg.json') }}
+
+      - name: Install and set VCPKG_ROOT
+        shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == "Linux" ]]; then
+            echo "VCPKG_ROOT will be set inside the container"
+          else
+            if [[ -n "$VCPKG_INSTALLATION_ROOT" ]]; then
+              echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
+            else
+              git clone https://github.com/microsoft/vcpkg.git ~/vcpkg
+              cd ~/vcpkg
+              ./bootstrap-vcpkg.sh
+              echo "VCPKG_ROOT=$HOME/vcpkg" >> $GITHUB_ENV
+            fi
+          fi
+
+      - name: Configure vcpkg env
+        shell: bash
+        run: |
+          echo "VCPKG_OVERLAY_TRIPLETS=$GITHUB_WORKSPACE/vcpkg-triplets" >> $GITHUB_ENV
+          echo "VCPKG_TARGET_TRIPLET=${{ matrix.triplet }}" >> $GITHUB_ENV
+
+      - name: Debug vcpkg
+        run: |
+          vcpkg env --debug
+
       - name: Cache wheels
         id: cache-wheels
         uses: actions/cache@v4
         with:
           path: ./wheelhouse
           key: cibw-wheels-${{ matrix.os }}-1
-
-      - name: Checkout Source Code
-        if: steps.cache-wheels.outputs.cache-hit != 'true'
-        uses: actions/checkout@v4
-
-      - name: Download Draco SDK
-        if: steps.cache-wheels.outputs.cache-hit != 'true'
-        uses: actions/download-artifact@v4
-        with:
-          name: draco-sdk-${{ matrix.os }}
-          path: ${{ env.DRACO_SDK_REL_PATH }}
 
       - name: Set up Python
         if: steps.cache-wheels.outputs.cache-hit != 'true'
@@ -130,9 +84,10 @@ jobs:
         if: steps.cache-wheels.outputs.cache-hit != 'true'
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          DRACO_SDK_PATH: ${{ github.workspace }}/${{ env.DRACO_SDK_REL_PATH }}
           CIBW_ARCHS_MACOS: arm64
-          CIBW_ENVIRONMENT_LINUX: DRACO_SDK_PATH=/project/${{ env.DRACO_SDK_REL_PATH }}
+          CIBW_ENVIRONMENT_LINUX: >-
+            VCPKG_BINARY_SOURCES="clear;files,/project/vcpkg_cache,readwrite" 
+            VCPKG_OVERLAY_TRIPLETS="/project/vcpkg-triplets"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -148,8 +103,8 @@ jobs:
         include:
           # - os: ubuntu-latest
           # - os: ubuntu-24.04-arm
-          - os: windows-latest
-          # - os: macos-latest
+          # - os: windows-latest
+          - os: macos-latest
           # - os: ubuntu-latest
           #   container: python:3.11-alpine
           # - os: ubuntu-24.04-arm
