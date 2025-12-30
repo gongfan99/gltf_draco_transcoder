@@ -27,19 +27,19 @@ else()
 endif()
 
 if (EMSCRIPTEN)
-  find_package(TinyGLTF CONFIG REQUIRED)
+  find_path(TINYGLTF_INCLUDE_DIRS "tiny_gltf.h")
   add_executable(${PROJECT_NAME}
       cpp/selective_draco_transcoder.cc
       wasm/binding.cc
   )
-  target_link_libraries(${PROJECT_NAME} PRIVATE tinygltf::tinygltf draco::draco)
+  target_include_directories(${PROJECT_NAME} PRIVATE ${TINYGLTF_INCLUDE_DIRS})
 else()
   add_library(${PROJECT_NAME} SHARED
       cpp/selective_draco_transcoder.cc
   )
-  target_link_libraries(${PROJECT_NAME} PRIVATE draco::draco)
 endif()
 
+target_link_libraries(${PROJECT_NAME} PRIVATE draco::draco)
 
 # add_executable(draco cpp/draco_selective_prototype.cc)
 
