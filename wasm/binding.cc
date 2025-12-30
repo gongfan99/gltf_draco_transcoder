@@ -22,28 +22,39 @@ val vectorToArrayBuffer(const std::vector<char> &vec)
     return jsArrayBuffer;
 }
 
-// Wrapper functions for JavaScript interface
-val compress_gltf(const val &input_val, int qp = 11, int qt = 10, int qn = 8, int qc = 8,
-                  int qtg = 8, int qw = 8, int qg = 8, int cl = 7)
+// Wrapper functions for JavaScript interface with options object
+struct DracoOptionsJS
+{
+    int quantization_position = 11;
+    int quantization_tex_coord = 10;
+    int quantization_normal = 8;
+    int quantization_color = 8;
+    int quantization_tangent = 8;
+    int quantization_weight = 8;
+    int quantization_generic = 8;
+    int compression_level = 7;
+};
+
+val compress_gltf(const val &input_val, const DracoOptionsJS &options)
 {
     // Convert input ArrayBuffer to vector
     std::vector<char> input_data = arrayBufferToVector(input_val);
     size_t input_size = input_data.size();
 
     // Set up DracoOptions
-    DracoOptions options;
-    options.quantization_position = qp;
-    options.quantization_tex_coord = qt;
-    options.quantization_normal = qn;
-    options.quantization_color = qc;
-    options.quantization_tangent = qtg;
-    options.quantization_weight = qw;
-    options.quantization_generic = qg;
-    options.compression_level = cl;
+    DracoOptions c_options;
+    c_options.quantization_position = options.quantization_position;
+    c_options.quantization_tex_coord = options.quantization_tex_coord;
+    c_options.quantization_normal = options.quantization_normal;
+    c_options.quantization_color = options.quantization_color;
+    c_options.quantization_tangent = options.quantization_tangent;
+    c_options.quantization_weight = options.quantization_weight;
+    c_options.quantization_generic = options.quantization_generic;
+    c_options.compression_level = options.compression_level;
 
     // Call the transcoder function
     size_t output_size;
-    void *result = draco_transcode_gltf_from_buffer((const void *)input_data.data(), input_size, &options, &output_size);
+    void *result = draco_transcode_gltf_from_buffer((const void *)input_data.data(), input_size, &c_options, &output_size);
 
     if (!result)
     {
@@ -87,6 +98,21 @@ val decompress_gltf(const val &input_val)
 
 EMSCRIPTEN_BINDINGS(gltf_draco_transcoder)
 {
+    value_object<DracoOptionsJS>("DracoOptions")
+        .field("quantization_position", &DracoOptionsJS::quantization_position)
+        .field("quantization_tex_coord", &DracoOptionsJS::quantization_tex_coord)
+        .field("quantization_normal", &DracoOptionsJS::quantization_normal)
+        .field("quantization_color", &DracoOptionsJS::quantization_color)
+        .field("quantization_tangent", &DracoOptionsJS::quantization_tangent)
+        .field("quantization_weight", &DracoOptionsJS::quantization_weight)
+        .field("quantization_generic", &DracoOptionsJS::quantization_generic)
+        .field("compression_level", &DracoOptionsJS::compression_level);
+
     function("compress_gltf", &compress_gltf);
+    function("compress_gltf", select_overload<val(const val &)>(
+                                  [](const val &input_val)
+                                  {
+                                      return compress_gltf(input_val, DracoOptionsJS());
+                                  }));
     function("decompress_gltf", &decompress_gltf);
 }
