@@ -35,11 +35,43 @@ struct DracoOptionsJS
     int compression_level = 7;
 };
 
-val compress_gltf(const val &input_val, const DracoOptionsJS &options)
+// Helper function to extract options from val
+DracoOptionsJS extractOptions(const val &options_val)
+{
+    DracoOptionsJS options; // Start with C++ defaults
+
+    if (!options_val.isUndefined() && !options_val.isNull())
+    {
+        // Extract each field if present, otherwise keep default
+        if (options_val.hasOwnProperty("quantization_position") && options_val["quantization_position"].isNumber())
+            options.quantization_position = options_val["quantization_position"].as<int>();
+        if (options_val.hasOwnProperty("quantization_tex_coord") && options_val["quantization_tex_coord"].isNumber())
+            options.quantization_tex_coord = options_val["quantization_tex_coord"].as<int>();
+        if (options_val.hasOwnProperty("quantization_normal") && options_val["quantization_normal"].isNumber())
+            options.quantization_normal = options_val["quantization_normal"].as<int>();
+        if (options_val.hasOwnProperty("quantization_color") && options_val["quantization_color"].isNumber())
+            options.quantization_color = options_val["quantization_color"].as<int>();
+        if (options_val.hasOwnProperty("quantization_tangent") && options_val["quantization_tangent"].isNumber())
+            options.quantization_tangent = options_val["quantization_tangent"].as<int>();
+        if (options_val.hasOwnProperty("quantization_weight") && options_val["quantization_weight"].isNumber())
+            options.quantization_weight = options_val["quantization_weight"].as<int>();
+        if (options_val.hasOwnProperty("quantization_generic") && options_val["quantization_generic"].isNumber())
+            options.quantization_generic = options_val["quantization_generic"].as<int>();
+        if (options_val.hasOwnProperty("compression_level") && options_val["compression_level"].isNumber())
+            options.compression_level = options_val["compression_level"].as<int>();
+    }
+
+    return options;
+}
+
+val compress_gltf(const val &input_val, const val &options_val)
 {
     // Convert input ArrayBuffer to vector
     std::vector<char> input_data = arrayBufferToVector(input_val);
     size_t input_size = input_data.size();
+
+    // Extract options with defaults
+    DracoOptionsJS options = extractOptions(options_val);
 
     // Set up DracoOptions
     DracoOptions c_options;
@@ -98,21 +130,20 @@ val decompress_gltf(const val &input_val)
 
 EMSCRIPTEN_BINDINGS(gltf_draco_transcoder)
 {
-    value_object<DracoOptionsJS>("DracoOptions")
-        .field("quantization_position", &DracoOptionsJS::quantization_position)
-        .field("quantization_tex_coord", &DracoOptionsJS::quantization_tex_coord)
-        .field("quantization_normal", &DracoOptionsJS::quantization_normal)
-        .field("quantization_color", &DracoOptionsJS::quantization_color)
-        .field("quantization_tangent", &DracoOptionsJS::quantization_tangent)
-        .field("quantization_weight", &DracoOptionsJS::quantization_weight)
-        .field("quantization_generic", &DracoOptionsJS::quantization_generic)
-        .field("compression_level", &DracoOptionsJS::compression_level);
+    // Two-argument version (with options)
+    function("compress_gltf", select_overload<val(const val &, const val &)>(
+                                  [](const val &input_val, const val &options_val)
+                                  {
+                                      return compress_gltf(input_val, options_val);
+                                  }));
 
-    function("compress_gltf", &compress_gltf);
+    // One-argument version (default options)
     function("compress_gltf", select_overload<val(const val &)>(
                                   [](const val &input_val)
                                   {
-                                      return compress_gltf(input_val, DracoOptionsJS());
+                                      val default_options = val::object();
+                                      return compress_gltf(input_val, default_options);
                                   }));
+
     function("decompress_gltf", &decompress_gltf);
 }
