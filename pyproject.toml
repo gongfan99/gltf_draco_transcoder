@@ -47,7 +47,7 @@ environment-pass = ["VCPKG_ROOT", "VCPKG_TARGET_TRIPLET"]
 [tool.cibuildwheel.linux]
 manylinux-x86_64-image = "manylinux_2_28"
 manylinux-aarch64-image = "manylinux_2_28"
-before-all = "scripts/install_vcpkg_linux.sh"
+before-all = "bash scripts/install_vcpkg_linux.sh"
 environment = { VCPKG_ROOT="/opt/vcpkg" }
 
 [tool.setuptools-scm]
