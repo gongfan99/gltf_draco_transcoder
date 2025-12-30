@@ -68,9 +68,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wasm-build
-          # path: |
-          #   build/*.wasm
-          #   build/*.js
-          #   build/*.mjs
-          path: build/
+          path: |
+            build/*.wasm
+            build/*.js
+            build/*.d.ts
+          # path: build/
           retention-days: 2

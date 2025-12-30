@@ -66,7 +66,7 @@ if (EMSCRIPTEN)
         -sMAXIMUM_MEMORY=500mb
         -sENVIRONMENT=web,node
         --bind
-        --emit-tsd "${TARGET}.d.ts"
+        --emit-tsd "${PROJECT_NAME}.d.ts"
     )
 else()
   set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -78,9 +78,9 @@ endif()
 
 
 if (EMSCRIPTEN)
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.js DESTINATION .)
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.wasm DESTINATION .)
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.d.ts DESTINATION .)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.js DESTINATION .)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.wasm DESTINATION .)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.d.ts DESTINATION .)
 else()
   # Install the library into the package directory (handled by scikit-build-core)
   install(TARGETS ${PROJECT_NAME}
