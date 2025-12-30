@@ -22,10 +22,10 @@ jobs:
           #   triplet: x64-linux-python
           # - os: ubuntu-24.04-arm
           #   triplet: arm64-linux-python
-          # - os: windows-latest
-          #   triplet: x64-windows-python
-          - os: macos-latest
-            triplet: arm64-osx-python
+          - os: windows-latest
+            triplet: x64-windows-python
+          # - os: macos-latest
+          #   triplet: arm64-osx-python
     steps:
       - uses: actions/checkout@v4
 
@@ -100,8 +100,8 @@ jobs:
         include:
           # - os: ubuntu-latest
           # - os: ubuntu-24.04-arm
-          # - os: windows-latest
-          - os: macos-latest
+          - os: windows-latest
+          # - os: macos-latest
           # - os: ubuntu-latest
           #   container: python:3.11-alpine
           # - os: ubuntu-24.04-arm
