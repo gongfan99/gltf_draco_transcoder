@@ -11,8 +11,4 @@ echo "Bootstrapping vcpkg..."
 cd /opt/vcpkg
 ./bootstrap-vcpkg.sh
 
-echo "Setting VCPKG_ROOT..."
-export VCPKG_ROOT=/opt/vcpkg
-echo "VCPKG_ROOT=$VCPKG_ROOT" >> $GITHUB_ENV
-
 echo "vcpkg installation complete."
