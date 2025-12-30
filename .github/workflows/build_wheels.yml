@@ -61,7 +61,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ./wheelhouse
-          key: cibw-wheels-${{ matrix.os }}-1
+          key: cibw-wheels-${{ matrix.triplet }}
 
       - name: Set up Python
         if: steps.cache-wheels.outputs.cache-hit != 'true'

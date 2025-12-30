@@ -1,4 +1,4 @@
-from .draco_transcoder import main
+from .loader import main
 
 if __name__ == "__main__":
     main()

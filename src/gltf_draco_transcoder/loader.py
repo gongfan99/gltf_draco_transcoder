@@ -34,7 +34,7 @@ class DracoOptions(Structure):
 def _load_library() -> ctypes.CDLL:
     """Load the Draco transcoder shared library."""
     system = platform.system().lower()
-    lib_name = "draco_transcoder_shared"
+    lib_name = "gltf_draco_transcoder"
 
     if system == "windows":
         lib_name = f"{lib_name}.dll"
