@@ -7,9 +7,9 @@ vcpkg_from_git(
         fix-invalid-casting.patch
 )
 
-if(VCPKG_TARGET_IS_EMSCRIPTEN)
-    set(ENV{EMSCRIPTEN} "${EMSCRIPTEN_ROOT}")
-endif()
+# if(VCPKG_TARGET_IS_EMSCRIPTEN)
+#     set(ENV{EMSCRIPTEN} "${EMSCRIPTEN_ROOT}")
+# endif()
 
 # 1. Fix the StatusOr constructor to handle const types (like Eigen Matrices)
 # This changes the error constructor to value-initialize value_, which is required for const types.
