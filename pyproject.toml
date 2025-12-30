@@ -44,7 +44,7 @@ wheel.py-api = "py3"
 [tool.cibuildwheel]
 build = ["cp311-*"]
 skip = ["*-win32", "*-manylinux_i686", "*-musllinux_i686"]
-environment-pass = ["VCPKG_TARGET_TRIPLET"]
+environment-pass = ["VCPKG_ROOT", "VCPKG_TARGET_TRIPLET"]
 
 [tool.cibuildwheel.linux]
 manylinux-x86_64-image = "manylinux_2_28"
