@@ -28,6 +28,8 @@ jobs:
             triplet: arm64-osx-python
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Cache vcpkg binaries
         uses: actions/cache@v4
@@ -156,6 +158,10 @@ jobs:
       id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
 
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - uses: actions/download-artifact@v4
         with:
           name: cibw-wheels-ubuntu-latest
@@ -183,3 +189,23 @@ jobs:
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+
+      - name: Generate Release Notes (Conventional Commits)
+        uses: TriPSs/conventional-changelog-action@v5
+        id: changelog
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          tag-prefix: "v"
+          output-file: false
+          skip-commit: true
+          skip-git-pull: true
+
+      - name: Create GitHub Release with Conventional Notes
+        uses: softprops/action-gh-release@v2.0.6
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          body: ${{ steps.changelog.outputs.changelog }}
+          files: dist/*.tar.gz
+          draft: false
+          prerelease: false

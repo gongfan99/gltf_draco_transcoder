@@ -49,3 +49,7 @@ src/gltf_draco_transcoder/*.glb
 build.bat
 __pycache__
 .pytest_cache
+
+vcpkg_cache/
+wheelhouse/
+
