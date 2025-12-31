@@ -33,12 +33,14 @@ target_include_directories(${PROJECT_NAME}
 if (EMSCRIPTEN)
     target_compile_options (${PROJECT_NAME} PRIVATE
         $<IF:$<CONFIG:Release>,-sDISABLE_EXCEPTION_CATCHING=1,-sDISABLE_EXCEPTION_CATCHING=0>
+        -Oz
     )
     target_link_options (${PROJECT_NAME} PRIVATE
         $<IF:$<CONFIG:Release>,-sDISABLE_EXCEPTION_CATCHING=1,-sDISABLE_EXCEPTION_CATCHING=0>
         # -g
         # -fsanitize=address
         # -sASSERTIONS=2
+        -Oz
         -sMODULARIZE=1
         -sEXPORT_ES6=1
         -sSTACK_SIZE=4mb

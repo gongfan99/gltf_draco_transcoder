@@ -35,7 +35,7 @@ namespace selective_draco
     template <typename... Args>
     inline void Log(Args &&...args)
     {
-        (std::cout << ... << args) << std::endl;
+        // (std::cout << ... << args) << std::endl;
     }
 
     // Helper to get buffer data from tinygltf accessor
