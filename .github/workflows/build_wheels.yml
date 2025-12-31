@@ -103,7 +103,7 @@ jobs:
         run: |
           pip install build
           python -m build --sdist
-          ls -l $GITHUB_WORKSPACE/vcpkg_cache
+          ls -l ${{ github.workspace }}/vcpkg_cache
 
       - name: Upload sdist artifact
         if: matrix.os == 'ubuntu-latest'
