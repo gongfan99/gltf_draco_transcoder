@@ -8,20 +8,15 @@ if command -v apk >/dev/null 2>&1; then
         git curl zip unzip tar pkgconf \
         build-base cmake \
         linux-headers bash
-    cmake --version
     git clone https://github.com/ninja-build/ninja.git /tmp/ninja
     cd /tmp/ninja
     cmake -B build
-    cmake --build build
+    cmake --build build --target ninja --parallel $(getconf _NPROCESSORS_ONLN)
     cp build/ninja /usr/local/bin/ninja
 elif command -v yum >/dev/null 2>&1; then
     # Manylinux (RHEL/Alma)
     yum install -y git curl zip unzip tar pkgconfig
 fi
-
-echo "Checking build tool versions..."
-ninja --version
-cmake --version
 
 echo "Cloning vcpkg..."
 git clone https://github.com/microsoft/vcpkg.git /opt/vcpkg
