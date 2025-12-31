@@ -56,4 +56,4 @@ environment = { VCPKG_ROOT="/opt/vcpkg" }
 [tool.setuptools_scm]
 version_scheme = "guess-next-dev"
 local_scheme = "no-local-version"
-version_file = "gltf_draco_transcoder/_version.py"
+version_file = "src/gltf_draco_transcoder/_version.py"
