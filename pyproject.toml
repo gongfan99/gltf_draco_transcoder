@@ -50,7 +50,6 @@ test-command = "pytest {project}/tests"
 manylinux-x86_64-image = "manylinux_2_28"
 manylinux-aarch64-image = "manylinux_2_28"
 before-all = "ls -l /host{project}/vcpkg_cache && bash scripts/install_vcpkg_linux.sh"
-after-all = "ls -l /host{project}/vcpkg_cache"
 environment = { VCPKG_ROOT="/opt/vcpkg" }
 
 [tool.setuptools-scm]
