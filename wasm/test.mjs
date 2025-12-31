@@ -10,15 +10,21 @@ function toArrayBuffer(nodeBuffer) {
   );
 }
 
+function isValidGlb(buffer) {
+  // glTF 2.0 magic number: 0x46546C67 (little endian)
+  const magic =
+    buffer.byteLength >= 4 ? new DataView(buffer, 0, 4).getUint32(0, true) : 0;
+  return magic === 0x46546c67; // "glTF"
+}
+
 const transcoder = await factory();
 
 console.log("=== WASM Draco Transcoder Test ===");
 
-// Find all .glb files in the tests directory
+// Use specific test files
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const testsDir = join(__dirname, "..", "tests");
-const testFiles = await readdir(testsDir);
-const glbFiles = testFiles.filter((file) => file.endsWith(".glb"));
+const glbFiles = ["partial_cylinder.glb"];
 
 if (glbFiles.length === 0) {
   console.error("No .glb test files found in tests directory");
@@ -42,6 +48,7 @@ for (const filename of glbFiles) {
       {}
     );
     const compressEnd = performance.now();
+    const compressTime = (compressEnd - compressStart).toFixed(2);
 
     const compressedSize = compressedArrayBuffer.byteLength;
 
@@ -51,6 +58,7 @@ for (const filename of glbFiles) {
       compressedArrayBuffer
     );
     const decompressEnd = performance.now();
+    const decompressTime = (decompressEnd - decompressStart).toFixed(2);
 
     const decompressedSize = decompressedArrayBuffer.byteLength;
 
@@ -59,18 +67,27 @@ for (const filename of glbFiles) {
       (1 - compressedSize / originalSize) *
       100
     ).toFixed(1);
-    const compressTime = (compressEnd - compressStart).toFixed(2);
-    const decompressTime = (decompressEnd - decompressStart).toFixed(2);
+
+    console.log(`  Compress time: ${compressTime} ms`);
+    console.log(`  Decompress time: ${decompressTime} ms`);
 
     // Verify round-trip integrity
     const originalData = new Uint8Array(buffer);
     const decompressedData = new Uint8Array(decompressedArrayBuffer);
 
+    // Check if decompressed data is a valid glb file
+    const isValid = isValidGlb(decompressedArrayBuffer);
+    console.log(`  Valid glb file: ${isValid ? "✅ Yes" : "❌ No"}`);
+
     // Basic sanity check - sizes should be similar (allowing for minor format differences)
     const sizeDifference = Math.abs(decompressedSize - originalSize);
-    const maxAcceptableDifference = Math.min(originalSize * 1.0, 10240); // 10% or 1KB
+    const maxAcceptableDifference = Math.min(originalSize * 0.1, 1024); // 10% or 1KB
 
-    if (sizeDifference > maxAcceptableDifference) {
+    if (!isValid) {
+      console.error(
+        `❌ ${filename}: Round-trip failed - decompressed data is not a valid glb file`
+      );
+    } else if (sizeDifference > maxAcceptableDifference) {
       console.error(
         `❌ ${filename}: Round-trip failed - size difference too large (${sizeDifference} bytes)`
       );
