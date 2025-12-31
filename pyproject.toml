@@ -53,7 +53,7 @@ manylinux-aarch64-image = "manylinux_2_28"
 before-all = "sh scripts/install_vcpkg_linux.sh"
 environment = { VCPKG_ROOT="/opt/vcpkg" }
 
-[tool.setuptools-scm]
+[tool.setuptools_scm]
 version_scheme = "guess-next-dev"
 local_scheme = "no-local-version"
-version_file = "src/gltf_draco_transcoder/_version.py"
+version_file = "gltf_draco_transcoder/_version.py"

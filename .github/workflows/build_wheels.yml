@@ -207,6 +207,6 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           body: ${{ steps.changelog.outputs.changelog }}
-          files: dist/*.tar.gz
+          # files: dist/*.tar.gz
           draft: false
           prerelease: false
