@@ -59,27 +59,27 @@ jobs:
         run: |
           echo "VCPKG_TARGET_TRIPLET=${{ matrix.triplet }}" >> $GITHUB_ENV
 
-      - name: Cache wheels
-        id: cache-wheels
-        uses: actions/cache@v4
-        with:
-          path: ./wheelhouse
-          key: cibw-wheels-${{ matrix.triplet }}
+      # - name: Cache wheels
+      #   id: cache-wheels
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: ./wheelhouse
+      #     key: cibw-wheels-${{ matrix.triplet }}
 
       - name: Set up Python
-        if: steps.cache-wheels.outputs.cache-hit != 'true'
+        if: (!steps.cache-wheels || steps.cache-wheels.outputs.cache-hit != 'true')
         uses: actions/setup-python@v4
         with:
           python-version: "3.11"
 
       - name: Install dependencies
-        if: steps.cache-wheels.outputs.cache-hit != 'true'
+        if: (!steps.cache-wheels || steps.cache-wheels.outputs.cache-hit != 'true')
         run: |
           python -m pip install --upgrade pip
           pip install cibuildwheel
 
       - name: Build wheels
-        if: steps.cache-wheels.outputs.cache-hit != 'true'
+        if: (!steps.cache-wheels || steps.cache-wheels.outputs.cache-hit != 'true')
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_ARCHS_MACOS: arm64
@@ -156,6 +156,7 @@ jobs:
     environment: release
     permissions:
       id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
+      contents: write # Needed to create GitHub Release
 
     steps:
       - uses: actions/checkout@v4
