@@ -131,7 +131,7 @@ jobs:
       - name: Install wheel and test
         run: |
           pip install pytest
-          pip install dist/*.whl
+          pip install --no-index --find-links dist/ gltf_draco_transcoder
           pytest tests/
 
   publish:
