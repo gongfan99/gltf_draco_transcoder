@@ -9,3 +9,5 @@ set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE "$ENV{EMSDK}/upstream/emscripten/cmake/Module
 set(VCPKG_C_FLAGS_RELEASE "-Oz")
 set(VCPKG_CXX_FLAGS_RELEASE "-Oz")
 set(VCPKG_POLICY_EMPTY_PACKAGE enabled)
+
+set(VCPKG_BUILD_TYPE release)

@@ -43,7 +43,7 @@ jobs:
       - name: Configure CMake and Build
         run: |
           source emsdk/emsdk_env.sh
-          cmake -B build \
+          cmake -S . -B build -G Ninja \
             -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
             -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
             -DVCPKG_OVERLAY_TRIPLETS=${{ github.workspace }}/vcpkg-triplets \
@@ -51,6 +51,9 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON
           cmake --build build --config Release
+
+      - name: Run WASM Tests
+        run: node wasm/test.mjs
 
       - name: Upload WASM artifacts
         uses: actions/upload-artifact@v4

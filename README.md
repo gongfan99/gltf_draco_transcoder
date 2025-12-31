@@ -44,15 +44,10 @@ with open('output_decompressed.glb', 'wb') as f:
 #### Advanced Compression with Custom Options
 
 ```python
-from gltf_draco_transcoder import compress_gltf, DracoOptions
+from gltf_draco_transcoder import compress_gltf
 
-# Create custom compression options
-options = DracoOptions()
-options.quantization_position = 14  # Higher quality for positions
-options.quantization_normal = 10    # Higher quality for normals
-options.compression_level = 9       # Higher compression effort
-
-# Compress with custom settings
+# Compress with custom quantization and compression level settings
+# qp: quantization_position, qn: quantization_normal, cl: compression_level
 compressed_data = compress_gltf('input.glb', qp=14, qn=10, cl=9)
 ```
 
