@@ -89,19 +89,21 @@ jobs:
           CIBW_ENVIRONMENT: >
             CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}"
           CIBW_ENVIRONMENT_LINUX: >
-            VCPKG_BINARY_SOURCES="clear;files,/host{project}/vcpkg_cache,readwrite"
+            VCPKG_BINARY_SOURCES="clear;files,/host${{ github.workspace }}/vcpkg_cache,readwrite"
             CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}"
 
       - uses: actions/upload-artifact@v4
         with:
           name: cibw-wheels-${{ matrix.os }}
           path: ./wheelhouse/*.whl
+          retention-days: 2
 
       - name: Build sdist
         if: matrix.os == 'ubuntu-latest'
         run: |
           pip install build
           python -m build --sdist
+          ls -l $GITHUB_WORKSPACE/vcpkg_cache
 
       - name: Upload sdist artifact
         if: matrix.os == 'ubuntu-latest'
@@ -109,6 +111,7 @@ jobs:
         with:
           name: cibw-sdist
           path: dist/*.tar.gz
+          retention-days: 1
 
   test_wheels:
     name: Test wheels on ${{ matrix.os }}
