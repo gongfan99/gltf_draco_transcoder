@@ -20,12 +20,12 @@ jobs:
         include:
           - os: ubuntu-latest
             triplet: x64-linux-python
-          # - os: ubuntu-24.04-arm
-          #   triplet: arm64-linux-python
-          # - os: windows-latest
-          #   triplet: x64-windows-python
-          # - os: macos-latest
-          #   triplet: arm64-osx-python
+          - os: ubuntu-24.04-arm
+            triplet: arm64-linux-python
+          - os: windows-latest
+            triplet: x64-windows-python
+          - os: macos-latest
+            triplet: arm64-osx-python
     steps:
       - uses: actions/checkout@v4
 
@@ -46,13 +46,13 @@ jobs:
           else
             if [[ -n "$VCPKG_INSTALLATION_ROOT" ]]; then
               VCPKG_ROOT_FS=$(echo "$VCPKG_INSTALLATION_ROOT" | sed 's/\\/\//g')
-              echo "VCPKG_ROOT=$VCPKG_ROOT_FS" >> $GITHUB_ENV
             else
               git clone https://github.com/microsoft/vcpkg.git ~/vcpkg
               cd ~/vcpkg
               ./bootstrap-vcpkg.sh
-              echo "VCPKG_ROOT=$HOME/vcpkg" >> $GITHUB_ENV
+              VCPKG_ROOT_FS=$(echo "$HOME/vcpkg" | sed 's/\\/\//g')
             fi
+            echo "VCPKG_ROOT=$VCPKG_ROOT_FS" >> $GITHUB_ENV
           fi
 
       - name: Configure vcpkg env
