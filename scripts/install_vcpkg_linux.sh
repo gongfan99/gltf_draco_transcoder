@@ -6,9 +6,14 @@ if command -v apk >/dev/null 2>&1; then
     # Alpine (musllinux)
     apk add --no-cache \
         git curl zip unzip tar pkgconf \
-        build-base \
+        build-base cmake \
         linux-headers bash
-    pip install --upgrade ninja cmake
+    cmake --version
+    git clone https://github.com/ninja-build/ninja.git /tmp/ninja
+    cd /tmp/ninja
+    cmake -B build
+    cmake --build build
+    cp build/ninja /usr/local/bin/ninja
 elif command -v yum >/dev/null 2>&1; then
     # Manylinux (RHEL/Alma)
     yum install -y git curl zip unzip tar pkgconfig
