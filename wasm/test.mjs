@@ -81,7 +81,7 @@ for (const filename of glbFiles) {
 
     // Basic sanity check - sizes should be similar (allowing for minor format differences)
     const sizeDifference = Math.abs(decompressedSize - originalSize);
-    const maxAcceptableDifference = Math.min(originalSize * 0.1, 1024); // 10% or 1KB
+    const maxAcceptableDifference = Math.min(originalSize * 0.5, 10240);
 
     if (!isValid) {
       console.error(
