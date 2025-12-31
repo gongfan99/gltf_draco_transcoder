@@ -20,17 +20,19 @@ jobs:
         include:
           - os: ubuntu-latest
             triplet: x64-linux-python
-          - os: ubuntu-24.04-arm
-            triplet: arm64-linux-python
-          - os: windows-latest
-            triplet: x64-windows-python
-          - os: macos-latest
-            triplet: arm64-osx-python
+          # - os: ubuntu-24.04-arm
+          #   triplet: arm64-linux-python
+          # - os: windows-latest
+          #   triplet: x64-windows-python
+          # - os: macos-latest
+          #   triplet: arm64-osx-python
     steps:
       - uses: actions/checkout@v4
 
-      - name: Create vcpkg cache directory
-        run: mkdir -p ${{ github.workspace }}/vcpkg_cache
+      # - name: Create vcpkg cache directory
+      #   run: |
+      #     mkdir -p ${{ github.workspace }}/vcpkg_cache
+      #     chmod -R 777 ${{ github.workspace }}/vcpkg_cache
 
       - name: Cache vcpkg binaries
         uses: actions/cache@v4
@@ -86,8 +88,8 @@ jobs:
           CIBW_ARCHS_MACOS: arm64
           CIBW_ENVIRONMENT: >
             CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}"
-          CIBW_ENVIRONMENT_LINUX: >-
-            VCPKG_BINARY_SOURCES="clear;files,/project/vcpkg_cache,readwrite"
+          CIBW_ENVIRONMENT_LINUX: >
+            VCPKG_BINARY_SOURCES="clear;files,/host{project}/vcpkg_cache,readwrite"
             CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}"
 
       - uses: actions/upload-artifact@v4
