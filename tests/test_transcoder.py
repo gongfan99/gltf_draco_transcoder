@@ -1,3 +1,4 @@
+import io
 from pathlib import Path
 
 import pytest
@@ -81,3 +82,71 @@ def test_compression(filename, min_reduction):
     assert (
         compression_ratio >= min_reduction
     ), f"Compression ratio {compression_ratio:.2%} is below minimum {min_reduction:.2%} (original: {original_size}, compressed: {compressed_size})"
+
+
+def test_bytesio_input():
+    """Test that compress_gltf and decompress_gltf accept io.BytesIO as input."""
+    glb_path = Path(__file__).with_name("box.glb")
+
+    # Read original file into BytesIO
+    with open(glb_path, "rb") as f:
+        original_data = f.read()
+    input_bytesio = io.BytesIO(original_data)
+
+    # Test compress_gltf with BytesIO input
+    compressed = gdt.compress_gltf(input_bytesio)
+    assert isinstance(compressed, io.BytesIO), "compress_gltf should return BytesIO"
+    compressed_data = compressed.getvalue()
+    assert compressed_data.startswith(b"glTF"), "Compressed data should be valid glB"
+
+    # Test decompress_gltf with BytesIO input (compressed data)
+    decompressed = gdt.decompress_gltf(compressed)
+    assert isinstance(decompressed, io.BytesIO), "decompress_gltf should return BytesIO"
+    decompressed_data = decompressed.getvalue()
+    assert decompressed_data.startswith(
+        b"glTF"
+    ), "Decompressed data should be valid glB"
+
+
+def test_quantization_impact():
+    """Test that lower qp values result in better compression (smaller files)."""
+    glb_path = Path(__file__).with_name("partial_cylinder.glb")
+
+    # Read original file
+    with open(glb_path, "rb") as f:
+        original_data = f.read()
+
+    # Compress with default qp=11
+    compressed_11 = gdt.compress_gltf(glb_path, qp=11)
+    compressed_11_size = len(compressed_11.getvalue())
+
+    # Compress with higher qp=16
+    compressed_16 = gdt.compress_gltf(glb_path, qp=16)
+    compressed_16_size = len(compressed_16.getvalue())
+
+    # Lower qp should result in smaller file (better compression)
+    assert (
+        compressed_16_size > compressed_11_size
+    ), f"qp=16 ({compressed_16_size} bytes) should be larger than qp=11 ({compressed_11_size} bytes)"
+
+
+def test_compression_level_impact():
+    """Test that higher cl values result in better compression (smaller files)."""
+    glb_path = Path(__file__).with_name("partial_cylinder.glb")
+
+    # Read original file
+    with open(glb_path, "rb") as f:
+        original_data = f.read()
+
+    # Compress with default cl=3
+    compressed_1 = gdt.compress_gltf(glb_path, cl=1)
+    compressed_1_size = len(compressed_1.getvalue())
+
+    # Compress with higher cl=9
+    compressed_9 = gdt.compress_gltf(glb_path, cl=9)
+    compressed_9_size = len(compressed_9.getvalue())
+
+    # Higher cl should result in smaller file (better compression)
+    assert (
+        compressed_9_size <= compressed_1_size
+    ), f"cl=9 ({compressed_9_size} bytes) should be smaller or equal to cl=3 ({compressed_1_size} bytes)"

@@ -1,15 +1,19 @@
 # gltf_draco_transcoder
 
-A high-performance Python package for compressing and decompressing glTF/glb files using the Draco 3D data compression library. This package provides both a Python API and a command-line interface for efficient 3D model compression.
+A high-performance Python package for compressing and decompressing glb files using the Draco 3D data compression library. This package provides both a Python API and a command-line interface for efficient 3D model compression.
 
 ## Features
 
 - **Compression**: Compress glb files using Draco compression to reduce file sizes significantly
 - **Decompression**: Decompress Draco-compressed glb files back to standard glTF format
 - **High Performance**: C++ backend with Python bindings for maximum performance
-- **Cross-platform**: Supports Windows, macOS (ARM64), and Linux (including ARM64)
+- **Cross-platform**: Supports Windows, macOS (ARM64), and Linux (x86_64 and ARM64)
 - **Configurable**: Fine-tune compression quality with quantization and compression level settings
 - **Easy Integration**: Simple Python API and command-line interface
+
+## Live Demo
+
+Try the [online demo](https://gongfan99.github.io/gltf-demo/) to see Draco compression in action on glTF files. The demo uses the WebAssembly (WASM) port of the same C++ codebase as this Python package.
 
 ## Installation
 
@@ -53,7 +57,7 @@ compressed_data = compress_gltf('input.glb', qp=14, qn=10, cl=9)
 
 ### Command Line Interface
 
-Compress a glTF/glb file:
+Compress a glb file:
 
 ```bash
 python -m gltf_draco_transcoder input.glb output_compressed.glb
