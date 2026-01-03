@@ -32,14 +32,14 @@ pip install gltf_draco_transcoder
 ```python
 from gltf_draco_transcoder import compress_gltf, decompress_gltf
 
-# Compress a glTF/glb file
+# Compress a glb file
 compressed_data = compress_gltf('input.glb')
 
 # Save compressed data
 with open('output_compressed.glb', 'wb') as f:
     f.write(compressed_data.getvalue())
 
-# Decompress back to glTF/glb
+# Decompress back to glb
 decompressed_data = decompress_gltf('output_compressed.glb')
 with open('output_decompressed.glb', 'wb') as f:
     f.write(decompressed_data.getvalue())
