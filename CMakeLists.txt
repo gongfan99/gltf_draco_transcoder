@@ -33,7 +33,7 @@ target_include_directories(${PROJECT_NAME}
 if (EMSCRIPTEN)
     target_compile_options (${PROJECT_NAME} PRIVATE
         $<IF:$<CONFIG:Release>,-sDISABLE_EXCEPTION_CATCHING=1,-sDISABLE_EXCEPTION_CATCHING=0>
-        -Oz
+        -Os
     )
     target_link_options (${PROJECT_NAME} PRIVATE
         $<IF:$<CONFIG:Release>,-sDISABLE_EXCEPTION_CATCHING=1,-sDISABLE_EXCEPTION_CATCHING=0>
