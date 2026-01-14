@@ -28,20 +28,6 @@
 #include "draco/io/point_cloud_io.h"
 #include "draco/mesh/mesh.h"
 
-namespace std
-{
-    template <>
-    struct hash<std::pair<size_t, size_t>>
-    {
-        std::size_t operator()(const std::pair<size_t, size_t> &p) const
-        {
-            std::size_t h1 = std::hash<size_t>{}(p.first);
-            std::size_t h2 = std::hash<size_t>{}(p.second);
-            return h1 ^ (h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2));
-        }
-    };
-}
-
 #ifdef _WIN32
 #define DRACO_API __declspec(dllexport)
 #else
@@ -63,6 +49,19 @@ extern "C"
         int quantization_weight;
         int quantization_generic;
         int compression_level;
+        int min_vertices;
+
+#ifdef __cplusplus
+        DracoOptions() : quantization_position(11),
+                         quantization_tex_coord(10),
+                         quantization_normal(8),
+                         quantization_color(8),
+                         quantization_tangent(8),
+                         quantization_weight(8),
+                         quantization_generic(8),
+                         compression_level(7),
+                         min_vertices(30) {}
+#endif
     };
 
     // Function to transcode glTF from buffer with selective compression

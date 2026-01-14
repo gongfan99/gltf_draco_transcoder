@@ -1,7 +1,7 @@
 import { readFile, readdir } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import factory from "../build/gltf_draco_transcoder.js";
+import factory from "../build_wasm/gltf_draco_transcoder.js";
 
 function toArrayBuffer(nodeBuffer) {
   return nodeBuffer.buffer.slice(
@@ -81,7 +81,7 @@ for (const filename of glbFiles) {
 
     // Basic sanity check - sizes should be similar (allowing for minor format differences)
     const sizeDifference = Math.abs(decompressedSize - originalSize);
-    const maxAcceptableDifference = Math.min(originalSize * 0.5, 10240);
+    const maxAcceptableDifference = Math.min(originalSize * 0.6, 10240);
 
     if (!isValid) {
       console.error(

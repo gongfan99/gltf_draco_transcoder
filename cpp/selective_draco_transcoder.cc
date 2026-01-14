@@ -29,6 +29,20 @@
 
 #include "draco/core/status.h"
 
+namespace std
+{
+    template <>
+    struct hash<std::pair<size_t, size_t>>
+    {
+        std::size_t operator()(const std::pair<size_t, size_t> &p) const
+        {
+            std::size_t h1 = std::hash<size_t>{}(p.first);
+            std::size_t h2 = std::hash<size_t>{}(p.second);
+            return h1 ^ (h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2));
+        }
+    };
+}
+
 namespace selective_draco
 {
 
@@ -142,15 +156,22 @@ namespace selective_draco
                 {
                     return draco::Status(draco::Status::DRACO_ERROR, "Index out of range");
                 }
-                draco::Mesh::Face face;
-                for (size_t i = 0; i < indices.size(); i += 3)
+                if (primitive.mode == TINYGLTF_MODE_TRIANGLES)
                 {
-                    face[0] = indices[i];
-                    face[1] = indices[i + 1];
-                    face[2] = indices[i + 2];
-                    mesh.AddFace(face);
+                    draco::Mesh::Face face;
+                    for (size_t i = 0; i < indices.size(); i += 3)
+                    {
+                        face[0] = indices[i];
+                        face[1] = indices[i + 1];
+                        face[2] = indices[i + 2];
+                        mesh.AddFace(face);
+                    }
+                    Log("    Added ", indices.size() / 3, " faces");
                 }
-                Log("    Added ", indices.size() / 3, " faces");
+                else
+                {
+                    Log("    Skipping face creation for POINTS mode");
+                }
             }
             else if (indices_accessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT)
             {
@@ -170,15 +191,22 @@ namespace selective_draco
                     return draco::Status(draco::Status::DRACO_ERROR, "Index out of range");
                 }
 
-                draco::Mesh::Face face;
-                for (size_t i = 0; i < indices.size(); i += 3)
+                if (primitive.mode == TINYGLTF_MODE_TRIANGLES)
                 {
-                    face[0] = static_cast<uint32_t>(indices[i]);
-                    face[1] = static_cast<uint32_t>(indices[i + 1]);
-                    face[2] = static_cast<uint32_t>(indices[i + 2]);
-                    mesh.AddFace(face);
+                    draco::Mesh::Face face;
+                    for (size_t i = 0; i < indices.size(); i += 3)
+                    {
+                        face[0] = static_cast<uint32_t>(indices[i]);
+                        face[1] = static_cast<uint32_t>(indices[i + 1]);
+                        face[2] = static_cast<uint32_t>(indices[i + 2]);
+                        mesh.AddFace(face);
+                    }
+                    Log("    Added ", indices.size() / 3, " faces");
                 }
-                Log("    Added ", indices.size() / 3, " faces");
+                else
+                {
+                    Log("    Skipping face creation for POINTS mode");
+                }
             }
             else if (indices_accessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE)
             {
@@ -195,15 +223,22 @@ namespace selective_draco
                 {
                     return draco::Status(draco::Status::DRACO_ERROR, "Index out of range");
                 }
-                draco::Mesh::Face face;
-                for (size_t i = 0; i < indices.size(); i += 3)
+                if (primitive.mode == TINYGLTF_MODE_TRIANGLES)
                 {
-                    face[0] = static_cast<uint32_t>(indices[i]);
-                    face[1] = static_cast<uint32_t>(indices[i + 1]);
-                    face[2] = static_cast<uint32_t>(indices[i + 2]);
-                    mesh.AddFace(face);
+                    draco::Mesh::Face face;
+                    for (size_t i = 0; i < indices.size(); i += 3)
+                    {
+                        face[0] = static_cast<uint32_t>(indices[i]);
+                        face[1] = static_cast<uint32_t>(indices[i + 1]);
+                        face[2] = static_cast<uint32_t>(indices[i + 2]);
+                        mesh.AddFace(face);
+                    }
+                    Log("    Added ", indices.size() / 3, " faces");
                 }
-                Log("    Added ", indices.size() / 3, " faces");
+                else
+                {
+                    Log("    Skipping face creation for POINTS mode");
+                }
             }
             else
             {
@@ -570,6 +605,13 @@ namespace selective_draco
                 // Only allow compression for TRIANGLES/POINTS
                 int mode = primitive.mode;
                 if (mode != TINYGLTF_MODE_TRIANGLES && mode != TINYGLTF_MODE_POINTS)
+                {
+                    can_compress = false;
+                }
+
+                // Check minimum vertex count
+                size_t vertex_count = model.accessors[primitive.attributes.at("POSITION")].count;
+                if (vertex_count < static_cast<size_t>(options.min_vertices))
                 {
                     can_compress = false;
                 }

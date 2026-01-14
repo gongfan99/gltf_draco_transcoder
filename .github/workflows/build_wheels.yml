@@ -23,7 +23,7 @@ jobs:
           - os: ubuntu-24.04-arm
             triplet: arm64-linux-python
           - os: windows-latest
-            triplet: x64-windows-python
+            triplet: x64-windows-static-md-release
           - os: macos-latest
             triplet: arm64-osx-python
     steps:

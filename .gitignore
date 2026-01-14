@@ -42,10 +42,13 @@
 
 sdk/
 build/
+build_sample/
+build_wasm/
 dist/
 py/
 src/gltf_draco_transcoder/*.dll
 src/gltf_draco_transcoder/*.glb
+_version.py
 build.bat
 __pycache__
 .pytest_cache

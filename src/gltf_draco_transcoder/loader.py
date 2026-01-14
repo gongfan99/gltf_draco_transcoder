@@ -28,6 +28,7 @@ class DracoOptions(Structure):
         ("quantization_weight", c_int),
         ("quantization_generic", c_int),
         ("compression_level", c_int),
+        ("min_vertices", c_int),
     ]
 
 
@@ -90,6 +91,7 @@ def compress_gltf(
     qw: int = 8,
     qg: int = 8,
     cl: int = 7,
+    min_vertices: int = 30,
 ) -> io.BytesIO:
     """
     Compress glTF data using Draco compression.
@@ -104,6 +106,7 @@ def compress_gltf(
         qw (int): Quantization bits for weight attribute (default: 8)
         qg (int): Quantization bits for generic attribute (default: 8)
         cl (int): Compression level [0-10] (default: 7)
+        min_vertices (int): Minimum number of vertices required for compression (default: 30)
 
     Returns:
         io.BytesIO: Compressed glTF data
@@ -133,6 +136,7 @@ def compress_gltf(
     options.quantization_weight = qw
     options.quantization_generic = qg
     options.compression_level = cl
+    options.min_vertices = min_vertices
 
     # Get input data
     input_bytes = input_buffer.getvalue()

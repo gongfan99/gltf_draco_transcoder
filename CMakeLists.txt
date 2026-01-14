@@ -10,6 +10,25 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(draco CONFIG REQUIRED)
 find_path(TINYGLTF_INCLUDE_DIRS "tiny_gltf.h")
 
+
+# add_executable(${PROJECT_NAME}
+#     cpp/selective_draco_transcoder.cc
+#     cpp/sample.cc
+# )
+# target_link_libraries(${PROJECT_NAME} PRIVATE draco::draco)
+# target_include_directories(${PROJECT_NAME} 
+#   PUBLIC
+#     ${CMAKE_CURRENT_SOURCE_DIR}/cpp
+#   PRIVATE 
+#     ${TINYGLTF_INCLUDE_DIRS}
+# )
+# install(TARGETS ${PROJECT_NAME}
+#     LIBRARY DESTINATION .
+#     RUNTIME DESTINATION .
+#     ARCHIVE DESTINATION .
+# )
+
+
 if (EMSCRIPTEN)
   add_executable(${PROJECT_NAME}
       cpp/selective_draco_transcoder.cc
@@ -33,14 +52,13 @@ target_include_directories(${PROJECT_NAME}
 if (EMSCRIPTEN)
     target_compile_options (${PROJECT_NAME} PRIVATE
         $<IF:$<CONFIG:Release>,-sDISABLE_EXCEPTION_CATCHING=1,-sDISABLE_EXCEPTION_CATCHING=0>
-        -Os
     )
     target_link_options (${PROJECT_NAME} PRIVATE
         $<IF:$<CONFIG:Release>,-sDISABLE_EXCEPTION_CATCHING=1,-sDISABLE_EXCEPTION_CATCHING=0>
         # -g
         # -fsanitize=address
         # -sASSERTIONS=2
-        -Oz
+        -Os
         -sMODULARIZE=1
         -sEXPORT_ES6=1
         -sSTACK_SIZE=4mb
