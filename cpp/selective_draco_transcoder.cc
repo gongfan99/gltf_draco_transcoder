@@ -610,10 +610,13 @@ namespace selective_draco
                 }
 
                 // Check minimum vertex count
-                size_t vertex_count = model.accessors[primitive.attributes.at("POSITION")].count;
-                if (vertex_count < static_cast<size_t>(options.min_vertices))
+                if (mode == TINYGLTF_MODE_POINTS)
                 {
-                    can_compress = false;
+                    size_t vertex_count = model.accessors[primitive.attributes.at("POSITION")].count;
+                    if (vertex_count < static_cast<size_t>(options.min_vertices))
+                    {
+                        can_compress = false;
+                    }
                 }
 
                 can_compress_primitive[prim_key] = can_compress;

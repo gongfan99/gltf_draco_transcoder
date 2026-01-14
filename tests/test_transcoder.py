@@ -72,16 +72,16 @@ def test_compression(filename, min_reduction):
     # Verify compression occurred
     compressed_data = compressed.getvalue()
     compressed_size = len(compressed_data)
-    # assert compressed_size < original_size, "Compression should reduce file size"
+    assert compressed_size < original_size, "Compression should reduce file size"
 
     # Verify it's still a valid glB
     assert compressed_data.startswith(b"glTF"), "Output should be valid glB"
 
     # Verify compression ratio meets minimum requirement
     compression_ratio = (original_size - compressed_size) / original_size
-    # assert (
-    #     compression_ratio >= min_reduction
-    # ), f"Compression ratio {compression_ratio:.2%} is below minimum {min_reduction:.2%} (original: {original_size}, compressed: {compressed_size})"
+    assert (
+        compression_ratio >= min_reduction
+    ), f"Compression ratio {compression_ratio:.2%} is below minimum {min_reduction:.2%} (original: {original_size}, compressed: {compressed_size})"
 
 
 def test_bytesio_input():
